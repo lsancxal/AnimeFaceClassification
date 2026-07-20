@@ -11,8 +11,8 @@ NORMALIZE_MEAN = 0.5
 NORMALIZE_STD = 0.5
 
 #Training settings
-LARNING_RATE = 0.1
-NUM_EPOCHS = 10
+LEARNING_RATE = 0.001
+NUM_EPOCHS = 5
 RANDOM_SEED = 42
 
 #Device configuration

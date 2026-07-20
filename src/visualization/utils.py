@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from sympy import plot
 
 # Plot images from the zip file
 def plot_images(images, title):
@@ -16,3 +17,15 @@ def plot_images_from_zip(images):
     plot_images(images['anastasia'], 'Anastasia Images')
     # Plot images from 'takao'
     plot_images(images['takao'], 'Takao Images')
+
+# Plotting the training and validation loss
+def plot_losses(train_losses, val_losses):
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_losses, label='Training Loss')
+    plt.plot(val_losses, label='Validation Loss', linestyle='--')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+    plt.title('Training and Validation Loss')
+    plt.show()
