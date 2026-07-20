@@ -8,85 +8,161 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import zipfile
-from PIL import Image
 
-import io
-import requests
+import torch.nn as nn
+import torch.nn.functional as F
 
-def load_images_from_zip(zip_file):
-    with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-        images = {'anastasia': [], 'takao': []}
-        for file_name in zip_ref.namelist():
-            if file_name.startswith('anastasia') and file_name.endswith('.jpg'):
-                with zip_ref.open(file_name) as file:
-                    img = Image.open(file).convert('RGB')
-                    images['anastasia'].append(np.array(img))
-            elif file_name.startswith('takao') and file_name.endswith('.jpg'):
-                with zip_ref.open(file_name) as file:
-                    img = Image.open(file).convert('RGB')
-                    images['takao'].append(np.array(img))
-    return images
+from src.data.dataset import download_and_load_images, get_dataloaders, define_transforms
+from src.data.dataset import AnimeDataset
+from src.visualization.utils import plot_images_from_zip
 
-zip_file_url = 'https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/xZQHOyN8ONT92kH-ASb4Pw/data.zip'
-
-# Download the ZIP file
-response = requests.get(zip_file_url)
-zip_file_bytes = io.BytesIO(response.content)
-
-# Load images from zip file
-images = load_images_from_zip(zip_file_bytes)
-
-print("Number of images of Anastasia:", len(images['anastasia']))
-print("Number of images of Takao:", len(images['takao']))
-
-# Plot images from the zip file
-def plot_images(images, title):
-    fig, axes = plt.subplots(5, 10, figsize=(10, 5))
-    fig.suptitle(title, fontsize=16)
-    axes = axes.flatten()
-    for img, ax in zip(images, axes):
-        ax.imshow(img)
-        ax.axis('off')
-    plt.tight_layout()
-    plt.show()
-
-# Plot images from 'anastasia'
-plot_images(images['anastasia'], 'Anastasia Images')
-
-# Plot images from 'takao'
-plot_images(images['takao'], 'Takao Images')
+from src.config import ZIP_FILE_URL, RANDOM_SEED
 
 
-class AnimeDataset(Dataset):
-    def __init__(self, images, transform=None, classes=None):
-        self.images = []
-        self.labels = []
-        self.transform = transform
-        self.classes = classes
-        
-        for label, class_name in enumerate(self.classes):
-            for img in images[class_name]:
-                self.images.append(img)
-                self.labels.append(label)
-    
-    def __len__(self):
-        return len(self.images)
-    
-    def __getitem__(self, idx):
-        image = Image.fromarray(self.images[idx])
-        label = self.labels[idx]
-        
-        if self.transform:
-            image = self.transform(image)
-        
-        return image, label
 
-# Define transforms
-transform = transforms.Compose([
-    transforms.Resize((64, 64)),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
+# Set random seed for reproducibility
+np.random.seed(RANDOM_SEED)
+torch.manual_seed(RANDOM_SEED)
 
+#Download and load images
+images = download_and_load_images(ZIP_FILE_URL)
+
+plot_images_from_zip(images)
+
+
+transform = define_transforms()
 # Load dataset
 dataset = AnimeDataset(images, transform=transform, classes=['anastasia', 'takao'])
+
+# Get dataloaders
+train_loader, val_loader = get_dataloaders(dataset)
+
+class AnimeCNN(nn.Module):
+    def __init__(self):
+        super(AnimeCNN, self).__init__()
+        # Add padding=1 to maintain the border
+        self.conv1 = nn.Conv2d(3, 32, 3, 1, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1, padding=1)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.fc1 = nn.Linear(64 * 16 * 16, 128)
+        self.fc2 = nn.Linear(128, 2)
+        
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 64 * 16 * 16)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+# Instantiate the model
+model = AnimeCNN()
+
+print(model)
+
+input_tensor = torch.randn(1, 3, 64, 64)
+
+def print_size(module, input, output):
+    print(f"{module.__class__.__name__} output size: {output.size()}")
+
+# Register hooks
+hooks = []
+for layer in model.children():
+    hook = layer.register_forward_hook(print_size)
+    hooks.append(hook)
+
+# Inspect output sizes
+with torch.no_grad():
+    output = model(input_tensor)
+print("Final output size:", output.size())
+
+# Remove hooks
+for hook in hooks:
+    hook.remove()
+
+
+import torch.optim as optim
+
+# Define the loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+
+import matplotlib.pyplot as plt
+import torch
+
+# Training loop
+num_epochs = 5
+train_losses = []
+val_losses = []
+
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+    for i, data in enumerate(train_loader, 0):
+        inputs, labels = data
+        optimizer.zero_grad()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+    
+    train_loss = running_loss / len(train_loader)
+    train_losses.append(train_loss)
+    
+    model.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for data in val_loader:
+            inputs, labels = data
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            val_loss += loss.item()
+    
+    val_loss = val_loss / len(val_loader)
+    val_losses.append(val_loss)
+    
+    print(f'Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
+
+print('Finished Training')
+
+
+# Plotting the training and validation loss
+plt.figure(figsize=(10, 5))
+plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss', linestyle='--')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+plt.title('Training and Validation Loss')
+plt.show()
+
+
+# Plotting the training and validation loss
+plt.figure(figsize=(10, 5))
+plt.plot(train_losses, label='Training Loss')
+plt.plot(val_losses, label='Validation Loss', linestyle='--')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.grid(True)
+plt.title('Training and Validation Loss')
+plt.show()
+
+
+correct = 0
+total = 0
+
+# Compute overall accuracy
+with torch.no_grad():
+    for data in val_loader:
+        images, labels = data
+        outputs = model(images)
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+        print(f'correct: {correct}, total: {total}')
+
+print(f'Validation Accuracy: {100 * correct / total:.2f}%')
