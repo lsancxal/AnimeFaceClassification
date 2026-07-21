@@ -6,7 +6,7 @@ import time
 from src.config import NUM_EPOCHS, LEARNING_RATE, DEVICE
 
 # Compute overall accuracy
-def calculate_accuracy(model, val_loader):
+def calculate_accuracy(model, val_loader, verbose=True):
     model = model.to(DEVICE)
     correct = 0
     total = 0
@@ -19,9 +19,13 @@ def calculate_accuracy(model, val_loader):
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-            print(f'correct: {correct}, total: {total}')
+            if verbose:
+                print(f'correct: {correct}, total: {total}')
 
-    print(f'Validation Accuracy: {100 * correct / total:.2f}%')
+    accuracy = correct / total
+    if verbose:
+        print(f'Validation Accuracy: {100 * accuracy:.2f}%')
+    return accuracy
 
 def train_and_evaluate(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, learning_rate=LEARNING_RATE):
 
@@ -34,6 +38,7 @@ def train_and_evaluate(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, l
     # Training loop
     train_losses = []
     val_losses = []
+    accuracy_list = []
 
     start_time = time.time()
 
@@ -65,8 +70,14 @@ def train_and_evaluate(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, l
         val_loss = val_loss / len(val_loader)
         val_losses.append(val_loss)
 
-        print(f'Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
+        accuracy = calculate_accuracy(model, val_loader, verbose=False)
+        accuracy_list.append(accuracy)
+
+        print(
+            f'Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, '
+            f'Val Loss: {val_loss:.4f}, Val Accuracy: {100 * accuracy:.2f}%'
+        )
 
     training_time = time.time() - start_time
     print(f'Training time: {training_time:.2f} seconds')
-    return train_losses, val_losses
+    return train_losses, val_losses, accuracy_list

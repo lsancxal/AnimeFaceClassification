@@ -5,10 +5,11 @@ import numpy as np
 from src.data.dataset import download_and_load_images, get_dataloaders, define_transforms
 from src.data.anime_dataset import AnimeDataset
 from src.visualization.utils import plot_images_from_zip, plot_losses
+from src.visualization.accuracy_and_cost import plot_accuracy_and_cost
 
 from src.models.cnn import AnimeCNN
 
-from src.training import train_and_evaluate, calculate_accuracy
+from src.training import train_and_evaluate
 
 from src.config import ZIP_FILE_URL, RANDOM_SEED, DEVICE
 
@@ -61,14 +62,13 @@ def main():
     #     hook.remove()
 
     print("Training and evaluating model...")
-    train_losses, val_losses = train_and_evaluate(model, train_loader, val_loader)
+    train_losses, val_losses, accuracy_list = train_and_evaluate(model, train_loader, val_loader)
 
     print("Plotting losses...")
     plot_losses(train_losses, val_losses)
 
-    print("Calculating accuracy...")
-    calculate_accuracy(model, val_loader)
-
+    print("Plotting accuracy and cost...")
+    plot_accuracy_and_cost(train_losses, accuracy_list)
 
 if __name__ == "__main__":
     main()
