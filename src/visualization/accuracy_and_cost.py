@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 
-def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
+def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path='outputs/accuracy_and_cost.png'):
     """
     Plot training cost and accuracy over epochs.
 
@@ -11,7 +11,7 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
         cost_list: List of cost values per epoch.
         accuracy_list: List of accuracy values per epoch (0-1 scale).
         show: Whether to call plt.show().
-        save_path: Optional path to save the figure.
+        save_path: Path to save the figure. Pass None to skip saving.
 
     Returns:
         fig: The matplotlib figure.
