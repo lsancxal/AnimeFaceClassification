@@ -23,25 +23,7 @@ def calculate_accuracy(model, val_loader):
 
     print(f'Validation Accuracy: {100 * correct / total:.2f}%')
 
-def evaluate(model, val_loader):
-    model = model.to(DEVICE)
-    model.eval()
-    val_loss = 0.0
-    val_losses = []
-    criterion = nn.CrossEntropyLoss()
-    with torch.no_grad():
-        for data in val_loader:
-            inputs, labels = data
-            inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            val_loss += loss.item()
-    val_loss = val_loss / len(val_loader)
-    val_losses.append(val_loss)
-    print(f'Val Loss: {val_loss:.4f}')
-    return val_losses
-
-def train(model, train_loader, num_epochs=NUM_EPOCHS, learning_rate=LEARNING_RATE):
+def train_and_evaluate(model, train_loader, val_loader, num_epochs=NUM_EPOCHS, learning_rate=LEARNING_RATE):
 
     model = model.to(DEVICE)
 
@@ -51,6 +33,7 @@ def train(model, train_loader, num_epochs=NUM_EPOCHS, learning_rate=LEARNING_RAT
 
     # Training loop
     train_losses = []
+    val_losses = []
 
     start_time = time.time()
 
@@ -70,8 +53,20 @@ def train(model, train_loader, num_epochs=NUM_EPOCHS, learning_rate=LEARNING_RAT
         train_loss = running_loss / len(train_loader)
         train_losses.append(train_loss)
 
-        print(f'Epoch {epoch + 1}, Train Loss: {train_loss:.4f}')
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for data in val_loader:
+                inputs, labels = data
+                inputs, labels = inputs.to(DEVICE), labels.to(DEVICE)
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                val_loss += loss.item()
+        val_loss = val_loss / len(val_loader)
+        val_losses.append(val_loss)
+
+        print(f'Epoch {epoch + 1}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
 
     training_time = time.time() - start_time
     print(f'Training time: {training_time:.2f} seconds')
-    return train_losses
+    return train_losses, val_losses

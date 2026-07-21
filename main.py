@@ -8,7 +8,7 @@ from src.visualization.utils import plot_images_from_zip, plot_losses
 
 from src.models.cnn import AnimeCNN
 
-from src.training import train, evaluate, calculate_accuracy
+from src.training import train_and_evaluate, calculate_accuracy
 
 from src.config import ZIP_FILE_URL, RANDOM_SEED, DEVICE
 
@@ -60,13 +60,9 @@ def main():
     # for hook in hooks:
     #     hook.remove()
 
-    print("Training model...")
-    train_losses = train(model, train_loader)
+    print("Training and evaluating model...")
+    train_losses, val_losses = train_and_evaluate(model, train_loader, val_loader)
 
-    print("Evaluating model...")
-    val_losses = evaluate(model, val_loader)
-
-   
     print("Plotting losses...")
     plot_losses(train_losses, val_losses)
 
