@@ -1,6 +1,38 @@
 import os
 import matplotlib.pyplot as plt
 from sympy import plot
+import torch
+from src.config import DEVICE
+
+CLASS_NAMES = ['anastasia', 'takao']
+def get_predictions(model, data_loader):
+    """
+    Get all predictions and true labels from the model.
+    
+    Args:
+        model: The trained neural network model.
+        data_loader: DataLoader for the dataset.
+        
+    Returns:
+        tuple: (predictions, labels) as numpy arrays.
+    """
+    model.eval()
+    all_predictions = []
+    all_labels = []
+    
+    with torch.no_grad():
+        for x, y in data_loader:
+            x = x.to(DEVICE)
+            output = model(x)
+            _, predicted = torch.max(output, 1)
+            all_predictions.append(predicted.cpu())
+            all_labels.append(y)
+    
+    return (
+        torch.cat(all_predictions).numpy(),
+        torch.cat(all_labels).numpy()
+    )
+
 
 # Plot images from the zip file
 def plot_images(images, title):

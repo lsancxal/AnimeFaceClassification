@@ -4,8 +4,9 @@ import numpy as np
 
 from src.data.dataset import download_and_load_images, get_dataloaders, define_transforms
 from src.data.anime_dataset import AnimeDataset
-from src.visualization.utils import plot_images_from_zip, plot_losses
+from src.visualization.utils import plot_images_from_zip, plot_losses, get_predictions
 from src.visualization.accuracy_and_cost import plot_accuracy_and_cost
+from src.visualization.confusion_matrix import plot_confusion_matrix, plot_confusion_matrix_with_stats
 
 from src.models.cnn import AnimeCNN
 
@@ -69,6 +70,10 @@ def main():
 
     print("Plotting accuracy and cost...")
     plot_accuracy_and_cost(train_losses, accuracy_list)
+
+    print("Plotting confusion matrix...")
+    predictions, labels = get_predictions(model, val_loader)
+    plot_confusion_matrix(predictions, labels)
 
 if __name__ == "__main__":
     main()
