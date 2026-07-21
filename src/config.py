@@ -9,6 +9,7 @@ BATCH_SIZE = 8
 TEST_SIZE = 0.2
 NORMALIZE_MEAN = 0.5
 NORMALIZE_STD = 0.5
+CLASS_NAMES = ['anastasia', 'takao']
 
 #Training settings
 LEARNING_RATE = 0.001

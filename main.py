@@ -7,12 +7,13 @@ from src.data.anime_dataset import AnimeDataset
 from src.visualization.utils import plot_images_from_zip, plot_losses, get_predictions
 from src.visualization.accuracy_and_cost import plot_accuracy_and_cost
 from src.visualization.confusion_matrix import plot_confusion_matrix, plot_confusion_matrix_with_stats
+from src.visualization.precision_and_recall import plot_precision, plot_recall, plot_precision_recall_combined, print_classification_report
 
 from src.models.cnn import AnimeCNN
 
 from src.training import train_and_evaluate
 
-from src.config import ZIP_FILE_URL, RANDOM_SEED, DEVICE
+from src.config import ZIP_FILE_URL, RANDOM_SEED, DEVICE, CLASS_NAMES
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
     transform = define_transforms()
     
     print("Loading dataset...")
-    dataset = AnimeDataset(images, transform=transform, classes=['anastasia', 'takao'])
+    dataset = AnimeDataset(images, transform=transform, classes=CLASS_NAMES)
 
     print("Getting dataloaders...")
     train_loader, val_loader = get_dataloaders(dataset)
@@ -71,9 +72,18 @@ def main():
     print("Plotting accuracy and cost...")
     plot_accuracy_and_cost(train_losses, accuracy_list)
 
-    print("Plotting confusion matrix...")
     predictions, labels = get_predictions(model, val_loader)
+
+    print("Plotting confusion matrix...")
     plot_confusion_matrix(predictions, labels)
+
+    print("Plotting precision and recall...")
+    plot_precision(predictions, labels)
+    plot_recall(predictions, labels)
+    plot_precision_recall_combined(predictions, labels)
+    print_classification_report(predictions, labels)
+
+    print(f"\nFinal accuracy: {accuracy_list[-1]:.4f}")
 
 if __name__ == "__main__":
     main()

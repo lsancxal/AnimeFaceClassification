@@ -4,7 +4,6 @@ from sympy import plot
 import torch
 from src.config import DEVICE
 
-CLASS_NAMES = ['anastasia', 'takao']
 def get_predictions(model, data_loader):
     """
     Get all predictions and true labels from the model.

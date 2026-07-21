@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-from .utils import CLASS_NAMES
+from src.config import CLASS_NAMES
 
 
 def plot_confusion_matrix(predictions, labels, normalize=True, figsize=(12, 10), show=True, save_path="outputs/confusion_matrix.png"):
