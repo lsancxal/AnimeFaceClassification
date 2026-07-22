@@ -24,7 +24,7 @@ def plot_confusion_matrix(predictions, labels, normalize=True, figsize=(12, 10),
     Returns:
         tuple: (fig, confusion_matrix_array)
     """
-    cm = confusion_matrix(labels, predictions)
+    cm = confusion_matrix(labels, predictions, labels=list(range(len(CLASS_NAMES))))
     
     if normalize:
         cm_display = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -70,7 +70,7 @@ def plot_confusion_matrix_with_stats(predictions, labels, figsize=(14, 10), show
     Returns:
         tuple: (fig, confusion_matrix_array, per_class_accuracy)
     """
-    cm = confusion_matrix(labels, predictions)
+    cm = confusion_matrix(labels, predictions, labels=list(range(len(CLASS_NAMES))))
     per_class_accuracy = cm.diagonal() / cm.sum(axis=1)
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     

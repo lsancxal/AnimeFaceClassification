@@ -2,6 +2,7 @@
 
 import io
 import zipfile
+from pathlib import Path
 from PIL import Image
 import requests
 import numpy as np
@@ -12,28 +13,57 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from .anime_dataset import AnimeDataset
-from src.config import IMAGE_SIZE, NORMALIZE_MEAN, NORMALIZE_STD, BATCH_SIZE, TEST_SIZE, RANDOM_SEED
+from src.config import IMAGE_SIZE, NORMALIZE_MEAN, NORMALIZE_STD, BATCH_SIZE, TEST_SIZE, RANDOM_SEED, CLASS_NAMES
 
-def load_images_from_zip(zip_file):
+
+def _match_class_name(file_name, class_names=CLASS_NAMES):
+    """Match a zip entry to a class using folder name or filename prefix."""
+    path = file_name.replace('\\', '/')
+    parts = path.split('/')
+    folder = parts[-2] if len(parts) >= 2 else ''
+    stem = Path(parts[-1]).stem
+
+    for class_name in class_names:
+        if (
+            folder == class_name
+            or folder.startswith(f'{class_name}_')
+            or folder.startswith(f'{class_name}(')
+            or path.startswith(class_name)
+            or stem.startswith(class_name)
+        ):
+            return class_name
+    return None
+
+
+def load_images_from_zip(zip_file, class_names=CLASS_NAMES):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
-        images = {'anastasia': [], 'takao': []}
+        images = {name: [] for name in class_names}
         for file_name in zip_ref.namelist():
-            if file_name.startswith('anastasia') and file_name.endswith('.jpg'):
-                with zip_ref.open(file_name) as file:
-                    img = Image.open(file).convert('RGB')
-                    images['anastasia'].append(np.array(img))
-            elif file_name.startswith('takao') and file_name.endswith('.jpg'):
-                with zip_ref.open(file_name) as file:
-                    img = Image.open(file).convert('RGB')
-                    images['takao'].append(np.array(img))
+            lower_name = file_name.lower()
+            if not lower_name.endswith(('.jpg', '.jpeg', '.png')):
+                continue
+
+            class_name = _match_class_name(file_name, class_names)
+            if class_name is None:
+                continue
+
+            with zip_ref.open(file_name) as file:
+                img = Image.open(file).convert('RGB')
+                images[class_name].append(np.array(img))
     return images
 
-def download_and_load_images(zip_file_url):
+def download_and_load_images_from_url(zip_file_url):
     response = requests.get(zip_file_url)
     zip_file_bytes = io.BytesIO(response.content)
     images = load_images_from_zip(zip_file_bytes)
-    print("Number of images of Anastasia:", len(images['anastasia']))
-    print("Number of images of Takao:", len(images['takao']))
+    for class_name, class_images in images.items():
+        print(f"Number of images of {class_name}:", len(class_images))
+    return images
+
+def download_and_load_images_from_path(zip_file_path):
+    images = load_images_from_zip(zip_file_path)
+    for class_name, class_images in images.items():
+        print(f"Number of images of {class_name}:", len(class_images))
     return images
 
 # Define transforms

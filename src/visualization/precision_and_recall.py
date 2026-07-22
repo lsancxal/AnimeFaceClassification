@@ -11,19 +11,28 @@ from src.config import CLASS_NAMES
 def calculate_precision_recall(predictions, labels):
     """
     Calculate precision and recall for all classes.
-    
+
     Args:
         predictions: Model predictions as numpy array.
         labels: True labels as numpy array.
-        
+
     Returns:
         dict: Contains precision_per_class, recall_per_class, macro_precision, macro_recall
     """
+    class_labels = list(range(len(CLASS_NAMES)))
     return {
-        'precision': precision_score(labels, predictions, average=None, zero_division=0),
-        'recall': recall_score(labels, predictions, average=None, zero_division=0),
-        'macro_precision': precision_score(labels, predictions, average='macro', zero_division=0),
-        'macro_recall': recall_score(labels, predictions, average='macro', zero_division=0)
+        'precision': precision_score(
+            labels, predictions, labels=class_labels, average=None, zero_division=0
+        ),
+        'recall': recall_score(
+            labels, predictions, labels=class_labels, average=None, zero_division=0
+        ),
+        'macro_precision': precision_score(
+            labels, predictions, labels=class_labels, average='macro', zero_division=0
+        ),
+        'macro_recall': recall_score(
+            labels, predictions, labels=class_labels, average='macro', zero_division=0
+        ),
     }
 
 
@@ -193,4 +202,10 @@ def print_classification_report(predictions, labels):
     """
     print("\nClassification Report:")
     print("=" * 60)
-    print(classification_report(labels, predictions, target_names=CLASS_NAMES))
+    print(classification_report(
+        labels,
+        predictions,
+        labels=list(range(len(CLASS_NAMES))),
+        target_names=CLASS_NAMES,
+        zero_division=0,
+    ))
