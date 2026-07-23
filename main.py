@@ -13,10 +13,12 @@ from src.models.cnn import AnimeCNN
 
 from src.training import train_and_evaluate
 
-from src.config import ZIP_FILE_URL, RANDOM_SEED, DEVICE, CLASS_NAMES, ZIP_FILE_PATH
+from src.config import ZIP_FILE_URL, RANDOM_SEED, DEVICE, ZIP_FILE_PATH
 
 
 def main():
+
+    print("Starting...")
 
     # Set random seed for reproducibility
     np.random.seed(RANDOM_SEED)
@@ -28,7 +30,8 @@ def main():
     # images = download_and_load_images_from_url(ZIP_FILE_URL)
 
     print("Loading images from path...")
-    images = download_and_load_images_from_path(ZIP_FILE_PATH)
+    images, class_names = download_and_load_images_from_path(ZIP_FILE_PATH)
+    print(f"Using {len(class_names)} classes")
 
     print("Plotting random images from archive...")
     plot_random_images(images)
@@ -37,13 +40,13 @@ def main():
     transform = define_transforms()
     
     print("Loading dataset...")
-    dataset = AnimeDataset(images, transform=transform, classes=CLASS_NAMES)
+    dataset = AnimeDataset(images, transform=transform, classes=class_names)
 
     print("Getting dataloaders...")
     train_loader, val_loader = get_dataloaders(dataset)
 
     print("Instantiating model...")
-    model = AnimeCNN()
+    model = AnimeCNN(num_classes=len(class_names))
     print(f"Model architecture: \n{model}\n")
 
     # input_tensor = torch.randn(1, 3, 64, 64)
@@ -77,11 +80,11 @@ def main():
     predictions, labels = get_predictions(model, val_loader)
 
     print("Plotting confusion matrix...")
-    plot_confusion_matrix(predictions, labels)
+    plot_confusion_matrix(predictions, labels, class_names=class_names)
 
     print("Plotting precision and recall...")
-    plot_precision_recall_combined(predictions, labels)
-    print_classification_report(predictions, labels)
+    plot_precision_recall_combined(predictions, labels, class_names=class_names)
+    print_classification_report(predictions, labels, class_names=class_names)
 
     print(f"\nFinal accuracy: {accuracy_list[-1]:.4f}")
 

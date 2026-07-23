@@ -7,10 +7,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-from src.config import CLASS_NAMES
 
 
-def plot_confusion_matrix(predictions, labels, normalize=True, figsize=(12, 10), show=True, save_path="outputs/confusion_matrix.png"):
+def plot_confusion_matrix(predictions, labels, class_names, normalize=True, figsize=(12, 10), show=True, save_path="outputs/confusion_matrix.png"):
     """
     Plot confusion matrix from pre-computed predictions.
     
@@ -24,7 +23,7 @@ def plot_confusion_matrix(predictions, labels, normalize=True, figsize=(12, 10),
     Returns:
         tuple: (fig, confusion_matrix_array)
     """
-    cm = confusion_matrix(labels, predictions, labels=list(range(len(CLASS_NAMES))))
+    cm = confusion_matrix(labels, predictions, labels=list(range(len(class_names))))
     
     if normalize:
         cm_display = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
@@ -36,7 +35,7 @@ def plot_confusion_matrix(predictions, labels, normalize=True, figsize=(12, 10),
     
     sns.heatmap(
         cm_display, annot=True, fmt=fmt, cmap='Blues',
-        xticklabels=CLASS_NAMES, yticklabels=CLASS_NAMES,
+        xticklabels=class_names, yticklabels=class_names,
         ax=ax, square=True, cbar_kws={'shrink': 0.8}
     )
     
@@ -57,7 +56,7 @@ def plot_confusion_matrix(predictions, labels, normalize=True, figsize=(12, 10),
     return fig, cm
 
 
-def plot_confusion_matrix_with_stats(predictions, labels, figsize=(14, 10), show=True, save_path="outputs/confusion_matrix_with_stats.png"):
+def plot_confusion_matrix_with_stats(predictions, labels, class_names, figsize=(14, 10), show=True, save_path="outputs/confusion_matrix_with_stats.png"):
     """
     Plot confusion matrix with per-class accuracy statistics.
     
@@ -70,7 +69,7 @@ def plot_confusion_matrix_with_stats(predictions, labels, figsize=(14, 10), show
     Returns:
         tuple: (fig, confusion_matrix_array, per_class_accuracy)
     """
-    cm = confusion_matrix(labels, predictions, labels=list(range(len(CLASS_NAMES))))
+    cm = confusion_matrix(labels, predictions, labels=list(range(len(class_names))))
     per_class_accuracy = cm.diagonal() / cm.sum(axis=1)
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     
@@ -80,7 +79,7 @@ def plot_confusion_matrix_with_stats(predictions, labels, figsize=(14, 10), show
     # Confusion matrix heatmap
     sns.heatmap(
         cm_normalized, annot=True, fmt='.2f', cmap='Blues',
-        xticklabels=CLASS_NAMES, yticklabels=CLASS_NAMES,
+        xticklabels=class_names, yticklabels=class_names,
         ax=ax1, square=True, cbar_kws={'shrink': 0.8}
     )
     ax1.set_xlabel('Predicted Label', fontsize=12)
@@ -90,9 +89,9 @@ def plot_confusion_matrix_with_stats(predictions, labels, figsize=(14, 10), show
     
     # Per-class accuracy bar chart
     colors = plt.cm.Blues(per_class_accuracy)
-    bars = ax2.barh(range(len(CLASS_NAMES)), per_class_accuracy, color=colors)
-    ax2.set_yticks(range(len(CLASS_NAMES)))
-    ax2.set_yticklabels(CLASS_NAMES)
+    bars = ax2.barh(range(len(class_names)), per_class_accuracy, color=colors)
+    ax2.set_yticks(range(len(class_names)))
+    ax2.set_yticklabels(class_names)
     ax2.set_xlabel('Accuracy', fontsize=12)
     ax2.set_title('Per-Class Accuracy', fontsize=14, fontweight='bold')
     ax2.set_xlim(0, 1)
@@ -115,7 +114,7 @@ def plot_confusion_matrix_with_stats(predictions, labels, figsize=(14, 10), show
     overall_accuracy = (predictions == labels).sum() / len(labels)
     print(f"\nOverall Accuracy: {overall_accuracy:.2%}")
     print(f"\nPer-Class Accuracy:")
-    for name, acc in zip(CLASS_NAMES, per_class_accuracy):
+    for name, acc in zip(class_names, per_class_accuracy):
         print(f"  {name:12s}: {acc:.2%}")
     
     return fig, cm, per_class_accuracy

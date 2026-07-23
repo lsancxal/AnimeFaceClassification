@@ -6,11 +6,11 @@ import torch
 ZIP_FILE_URL = 'https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/xZQHOyN8ONT92kH-ASb4Pw/data.zip'
 ZIP_FILE_PATH = 'src/data/archive.zip'
 IMAGE_SIZE = 64
-BATCH_SIZE = 8
+BATCH_SIZE = 64
 TEST_SIZE = 0.2
 NORMALIZE_MEAN = 0.5
 NORMALIZE_STD = 0.5
-CLASS_NAMES = ['kirito', 'zero_two', 'sinon',  'raphtalia']
+#CLASS_NAMES = ['kirito', 'zero_two', 'sinon',  'raphtalia']
 
 #Model settings
 INPUT_CHANNELS = 3
@@ -26,7 +26,7 @@ FEATURE_MAP_SIZE = IMAGE_SIZE // (POOL_SIZE ** 2)
 
 #Training settings
 LEARNING_RATE = 0.001
-NUM_EPOCHS = 5
+NUM_EPOCHS = 50
 RANDOM_SEED = 42
 
 #Device configuration

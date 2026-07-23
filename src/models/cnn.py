@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from src.config import (
-    CLASS_NAMES,
     INPUT_CHANNELS,
     CONV1_OUT_CHANNELS,
     CONV2_OUT_CHANNELS,
@@ -16,10 +15,10 @@ from src.config import (
 
 
 class AnimeCNN(nn.Module):
-    def __init__(self, num_classes=None):
+    def __init__(self, num_classes):
         super(AnimeCNN, self).__init__()
-        if num_classes is None:
-            num_classes = len(CLASS_NAMES)
+        # if num_classes is None:
+        #     num_classes = len(CLASS_NAMES)
 
         flattened_size = CONV2_OUT_CHANNELS * FEATURE_MAP_SIZE * FEATURE_MAP_SIZE
 

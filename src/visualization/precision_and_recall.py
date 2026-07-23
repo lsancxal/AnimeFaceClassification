@@ -5,10 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, classification_report
 
-from src.config import CLASS_NAMES
 
-
-def calculate_precision_recall(predictions, labels):
+def calculate_precision_recall(predictions, labels, class_names):
     """
     Calculate precision and recall for all classes.
 
@@ -19,7 +17,7 @@ def calculate_precision_recall(predictions, labels):
     Returns:
         dict: Contains precision_per_class, recall_per_class, macro_precision, macro_recall
     """
-    class_labels = list(range(len(CLASS_NAMES)))
+    class_labels = list(range(len(class_names)))
     return {
         'precision': precision_score(
             labels, predictions, labels=class_labels, average=None, zero_division=0
@@ -36,7 +34,7 @@ def calculate_precision_recall(predictions, labels):
     }
 
 
-def _plot_metric_bar(values, macro_avg, metric_name, color_map, edge_color, figsize, show, save_path=None):
+def _plot_metric_bar(class_names, values, macro_avg, metric_name, color_map, edge_color, figsize, show, save_path=None):
     """
     Internal helper to plot a metric bar chart.
     
@@ -54,7 +52,7 @@ def _plot_metric_bar(values, macro_avg, metric_name, color_map, edge_color, figs
     """
     fig, ax = plt.subplots(figsize=figsize)
     
-    x = np.arange(len(CLASS_NAMES))
+    x = np.arange(len(class_names))
     colors = color_map(0.3 + 0.7 * values)
     bars = ax.bar(x, values, color=colors, edgecolor=edge_color, linewidth=1.2)
     
@@ -71,7 +69,7 @@ def _plot_metric_bar(values, macro_avg, metric_name, color_map, edge_color, figs
     ax.set_ylabel(metric_name, fontsize=12)
     ax.set_title(f'{metric_name} per Class', fontsize=14, fontweight='bold')
     ax.set_xticks(x)
-    ax.set_xticklabels(CLASS_NAMES, rotation=45, ha='right')
+    ax.set_xticklabels(class_names, rotation=45, ha='right')
     ax.set_ylim(0, 1.1)
     ax.legend(loc='lower right')
     ax.grid(axis='y', alpha=0.3)
@@ -129,7 +127,7 @@ def plot_recall(predictions, labels, figsize=(10, 6), show=True, save_path=None)
     return fig, metrics['recall']
 
 
-def plot_precision_recall_combined(predictions, labels, figsize=(12, 6), show=True, save_path='outputs/precision_recall_combined.png'):
+def plot_precision_recall_combined(predictions, labels, class_names, figsize=(12, 6), show=True, save_path='outputs/precision_recall_combined.png'):
     """
     Plot precision and recall side by side for all classes.
 
@@ -143,11 +141,11 @@ def plot_precision_recall_combined(predictions, labels, figsize=(12, 6), show=Tr
     Returns:
         tuple: (fig, precision_per_class, recall_per_class)
     """
-    metrics = calculate_precision_recall(predictions, labels)
+    metrics = calculate_precision_recall(predictions, labels, class_names)
     precision, recall = metrics['precision'], metrics['recall']
     
     fig, ax = plt.subplots(figsize=figsize)
-    x = np.arange(len(CLASS_NAMES))
+    x = np.arange(len(class_names))
     width = 0.35
     
     bars1 = ax.bar(x - width/2, precision, width, label='Precision', 
@@ -167,7 +165,7 @@ def plot_precision_recall_combined(predictions, labels, figsize=(12, 6), show=Tr
     ax.set_ylabel('Score', fontsize=12)
     ax.set_title('Precision and Recall per Class', fontsize=14, fontweight='bold')
     ax.set_xticks(x)
-    ax.set_xticklabels(CLASS_NAMES, rotation=45, ha='right')
+    ax.set_xticklabels(class_names, rotation=45, ha='right')
     ax.set_ylim(0, 1.15)
     ax.legend(loc='upper right')
     ax.grid(axis='y', alpha=0.3)
@@ -184,7 +182,7 @@ def plot_precision_recall_combined(predictions, labels, figsize=(12, 6), show=Tr
     print(f"\nPrecision and Recall Summary:")
     print(f"{'Class':<12} {'Precision':>10} {'Recall':>10}")
     print("-" * 34)
-    for name, prec, rec in zip(CLASS_NAMES, precision, recall):
+    for name, prec, rec in zip(class_names, precision, recall):
         print(f"{name:<12} {prec:>10.2%} {rec:>10.2%}")
     print("-" * 34)
     print(f"{'Macro Avg':<12} {metrics['macro_precision']:>10.2%} {metrics['macro_recall']:>10.2%}")
@@ -192,7 +190,7 @@ def plot_precision_recall_combined(predictions, labels, figsize=(12, 6), show=Tr
     return fig, precision, recall
 
 
-def print_classification_report(predictions, labels):
+def print_classification_report(predictions, labels, class_names):
     """
     Print a detailed classification report with precision, recall, and F1-score.
     
@@ -205,7 +203,7 @@ def print_classification_report(predictions, labels):
     print(classification_report(
         labels,
         predictions,
-        labels=list(range(len(CLASS_NAMES))),
-        target_names=CLASS_NAMES,
+        labels=list(range(len(class_names))),
+        target_names=class_names,
         zero_division=0,
     ))
