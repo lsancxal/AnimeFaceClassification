@@ -24,9 +24,13 @@ FC_HIDDEN_SIZE = 128
 # After two MaxPool(2) layers, spatial size is IMAGE_SIZE / 4
 FEATURE_MAP_SIZE = IMAGE_SIZE // (POOL_SIZE ** 2)
 
+#DataLoader settings
+NUM_WORKERS = 4
+PIN_MEMORY = torch.cuda.is_available()
+
 #Training settings
 LEARNING_RATE = 0.001
-NUM_EPOCHS = 50
+NUM_EPOCHS = 5
 RANDOM_SEED = 42
 
 #Device configuration

@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
+from src.visualization.display import show_saved_figure
+
 
 
 def plot_confusion_matrix(predictions, labels, class_names, normalize=True, figsize=(12, 10), show=True, save_path="outputs/confusion_matrix.png"):
@@ -50,8 +52,8 @@ def plot_confusion_matrix(predictions, labels, class_names, normalize=True, figs
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
     
     return fig, cm
 
@@ -107,8 +109,8 @@ def plot_confusion_matrix_with_stats(predictions, labels, class_names, figsize=(
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
     
     # Print summary
     overall_accuracy = (predictions == labels).sum() / len(labels)

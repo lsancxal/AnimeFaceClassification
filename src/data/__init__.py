@@ -3,6 +3,7 @@ from .dataset import (
     discover_calss_names_from_zip,
     download_and_load_images_from_url,
     download_and_load_images_from_path,
+    build_samples_from_zip,
     get_dataloaders,
     define_transforms,
 )
@@ -13,6 +14,7 @@ __all__ = [
     'discover_calss_names_from_zip',
     'download_and_load_images_from_url',
     'download_and_load_images_from_path',
+    'build_samples_from_zip',
     'get_dataloaders',
     'define_transforms',
     'AnimeDataset',

@@ -1,25 +1,34 @@
-from torch.utils.data import Dataset
+import io
+import zipfile
+
 from PIL import Image
+from torch.utils.data import Dataset
 
 
 class AnimeDataset(Dataset):
-    def __init__(self, images, transform=None, classes=None):
-        self.images = []
-        self.labels = []
+    def __init__(self, zip_file_path, samples, class_names, transform=None):
+        self.zip_file_path = zip_file_path
+        self.samples = samples
+        self.class_names = class_names
         self.transform = transform
-        self.classes = classes
+        self.labels = [label for _, label in samples]
+        self._zip_ref = None
 
-        for label, class_name in enumerate(self.classes):
-            for img in images[class_name]:
-                self.images.append(img)
-                self.labels.append(label)
+    def _get_zip_ref(self):
+        # Reuse one ZipFile handle per worker instead of reopening every sample.
+        if self._zip_ref is None:
+            self._zip_ref = zipfile.ZipFile(self.zip_file_path, 'r')
+        return self._zip_ref
 
     def __len__(self):
-        return len(self.images)
+        return len(self.samples)
 
     def __getitem__(self, idx):
-        image = Image.fromarray(self.images[idx])
-        label = self.labels[idx]
+        file_name, label = self.samples[idx]
+        zip_ref = self._get_zip_ref()
+
+        with zip_ref.open(file_name) as f:
+            image = Image.open(io.BytesIO(f.read())).convert('RGB')
 
         if self.transform:
             image = self.transform(image)

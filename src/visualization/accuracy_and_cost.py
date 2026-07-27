@@ -2,6 +2,8 @@ import os
 
 import matplotlib.pyplot as plt
 
+from src.visualization.display import show_saved_figure
+
 
 def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path='outputs/accuracy_and_cost.png'):
     """
@@ -55,7 +57,7 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path='outpu
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
 
     return fig

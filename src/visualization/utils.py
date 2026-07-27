@@ -1,8 +1,14 @@
+import io
 import os
+import zipfile
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from PIL import Image
+
 from src.config import DEVICE, RANDOM_SEED
+from src.visualization.display import show_saved_figure
 
 
 def get_predictions(model, data_loader):
@@ -54,51 +60,57 @@ def plot_images_from_zip(images):
         plot_images(class_images, f'{class_name} Images')
 
 
+def _load_image_from_zip(zip_ref, file_name):
+    with zip_ref.open(file_name) as f:
+        return np.array(Image.open(io.BytesIO(f.read())).convert('RGB'))
+
+
 def plot_random_images(
-    images,
+    zip_file_path,
+    samples,
+    class_names,
     num_images=50,
     rows=5,
     cols=10,
     seed=RANDOM_SEED,
     show=True,
-    save_path=None,
+    save_path='outputs/random_images.png',
 ):
     """
-    Plot a random sample of images from the loaded archive.
+    Plot a random sample of images from the archive without loading all images into RAM.
 
     Args:
-        images: Dict of class_name -> list of image arrays.
+        zip_file_path: Path to the ZIP archive.
+        samples: List of (file_name, label_index) tuples.
+        class_names: List of class names indexed by label.
         num_images: Number of random images to plot.
         rows: Number of subplot rows.
         cols: Number of subplot columns.
         seed: Random seed for reproducible sampling.
-        show: Whether to call plt.show().
+        show: Whether to display the figure.
         save_path: Path to save the figure. Pass None to skip saving.
 
     Returns:
         fig: The matplotlib figure.
     """
-    labeled_images = [
-        (class_name, img)
-        for class_name, class_images in images.items()
-        for img in class_images
-    ]
-    if not labeled_images:
+    if not samples:
         raise ValueError("No images available to plot.")
 
-    sample_size = min(num_images, len(labeled_images), rows * cols)
+    sample_size = min(num_images, len(samples), rows * cols)
     rng = np.random.default_rng(seed)
-    sample_indices = rng.choice(len(labeled_images), size=sample_size, replace=False)
-    sample = [labeled_images[i] for i in sample_indices]
+    sample_indices = rng.choice(len(samples), size=sample_size, replace=False)
+    selected_samples = [samples[i] for i in sample_indices]
 
     fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.2, rows * 1.4))
     axes = np.atleast_1d(axes).flatten()
     fig.suptitle(f'Random {sample_size} Images from Archive', fontsize=16)
 
-    for ax, (class_name, img) in zip(axes, sample):
-        ax.imshow(img)
-        ax.set_title(class_name, fontsize=8)
-        ax.axis('off')
+    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+        for ax, (file_name, label) in zip(axes, selected_samples):
+            image = _load_image_from_zip(zip_ref, file_name)
+            ax.imshow(image)
+            ax.set_title(class_names[label], fontsize=8)
+            ax.axis('off')
 
     for ax in axes[sample_size:]:
         ax.axis('off')
@@ -109,8 +121,10 @@ def plot_random_images(
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
+    plt.close('all')
 
     return fig
 
@@ -131,7 +145,7 @@ def plot_losses(train_losses, val_losses, show=True, save_path='outputs/training
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
 
     return fig

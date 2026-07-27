@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, classification_report
 
+from src.visualization.display import show_saved_figure
+
 
 def calculate_precision_recall(predictions, labels, class_names):
     """
@@ -79,8 +81,8 @@ def _plot_metric_bar(class_names, values, macro_avg, metric_name, color_map, edg
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
     
     return fig
 
@@ -175,8 +177,8 @@ def plot_precision_recall_combined(predictions, labels, class_names, figsize=(12
         os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
         fig.savefig(save_path, bbox_inches='tight', dpi=150)
         print(f"  Saved: {save_path}")
-    if show:
-        plt.show()
+    show_saved_figure(save_path, show=show)
+    plt.close(fig)
     
     # Print summary
     print(f"\nPrecision and Recall Summary:")

@@ -1,8 +1,11 @@
+import matplotlib
+matplotlib.use('Agg')
+
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-from src.data.dataset import download_and_load_images_from_url, download_and_load_images_from_path, get_dataloaders, define_transforms
+from src.data.dataset import download_and_load_images_from_url, download_and_load_images_from_path, build_samples_from_zip, get_dataloaders, define_transforms
 from src.data.anime_dataset import AnimeDataset
 from src.visualization.utils import plot_images_from_zip, plot_random_images, plot_losses, get_predictions
 from src.visualization.accuracy_and_cost import plot_accuracy_and_cost
@@ -30,17 +33,17 @@ def main():
     # images = download_and_load_images_from_url(ZIP_FILE_URL)
 
     print("Loading images from path...")
-    images, class_names = download_and_load_images_from_path(ZIP_FILE_PATH)
+    samples, class_names = build_samples_from_zip(ZIP_FILE_PATH)
     print(f"Using {len(class_names)} classes")
 
     print("Plotting random images from archive...")
-    plot_random_images(images)
+    plot_random_images(ZIP_FILE_PATH, samples, class_names, show=True)
 
     print("Defining transforms...")
     transform = define_transforms()
     
     print("Loading dataset...")
-    dataset = AnimeDataset(images, transform=transform, classes=class_names)
+    dataset = AnimeDataset(ZIP_FILE_PATH, samples, class_names, transform=transform)
 
     print("Getting dataloaders...")
     train_loader, val_loader = get_dataloaders(dataset)

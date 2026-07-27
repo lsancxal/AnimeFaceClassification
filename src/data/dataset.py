@@ -12,7 +12,16 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from .anime_dataset import AnimeDataset
-from src.config import IMAGE_SIZE, NORMALIZE_MEAN, NORMALIZE_STD, BATCH_SIZE, TEST_SIZE, RANDOM_SEED
+from src.config import (
+    IMAGE_SIZE,
+    NORMALIZE_MEAN,
+    NORMALIZE_STD,
+    BATCH_SIZE,
+    TEST_SIZE,
+    RANDOM_SEED,
+    NUM_WORKERS,
+    PIN_MEMORY,
+)
 
 
 def _discover_class_names_from_zip_ref(zip_ref):
@@ -34,6 +43,29 @@ def discover_class_names_from_zip(zip_file_path):
 # Keep old misspelled name as an alias so existing imports keep working
 discover_calss_names_from_zip = discover_class_names_from_zip
 
+def build_samples_from_zip(zip_file_path):
+    with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
+        class_names = set()
+        image_files=[]
+
+        for file_name in zip_ref.namelist():
+            if not file_name.lower().endswith(('.jpg', '.jpeg', '.png')):
+                continue
+
+            parts = file_name.replace('\\', '/').split('/')
+            if len(parts) < 3 or parts[0] != 'dataset':
+                continue
+
+            class_name = parts[1]
+            class_names.add(class_name)	
+            image_files.append((file_name, class_name))
+
+        class_names = sorted(class_names)
+        class_to_index = {name: idx for idx, name in enumerate(class_names)}
+
+        samples = [(file_name, class_to_index[class_name]) for file_name, class_name in image_files]
+
+        return samples, class_names
 
 def load_images_from_zip(zip_file, class_names=None):
     with zipfile.ZipFile(zip_file, 'r') as zip_ref:
@@ -85,7 +117,14 @@ def define_transforms(image_size=IMAGE_SIZE, normalize_mean=NORMALIZE_MEAN, norm
     return transform
 
 
-def get_dataloaders(dataset, batch_size=BATCH_SIZE, test_size=TEST_SIZE, random_state=RANDOM_SEED):
+def get_dataloaders(
+    dataset,
+    batch_size=BATCH_SIZE,
+    test_size=TEST_SIZE,
+    random_state=RANDOM_SEED,
+    num_workers=NUM_WORKERS,
+    pin_memory=PIN_MEMORY,
+):
     indices = list(range(len(dataset)))
 
     train_indices, val_indices = train_test_split(
@@ -98,7 +137,18 @@ def get_dataloaders(dataset, batch_size=BATCH_SIZE, test_size=TEST_SIZE, random_
     train_sampler = SubsetRandomSampler(train_indices)
     val_sampler = SubsetRandomSampler(val_indices)
 
-    train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
-    val_loader = DataLoader(dataset, batch_size=batch_size, sampler=val_sampler)
+    loader_kwargs = {
+        'batch_size': batch_size,
+        'pin_memory': pin_memory,
+    }
+    if num_workers > 0:
+        loader_kwargs.update({
+            'num_workers': num_workers,
+            'persistent_workers': True,
+            'prefetch_factor': 2,
+        })
+
+    train_loader = DataLoader(dataset, sampler=train_sampler, **loader_kwargs)
+    val_loader = DataLoader(dataset, sampler=val_sampler, **loader_kwargs)
 
     return train_loader, val_loader
