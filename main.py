@@ -9,8 +9,11 @@ from src.data.dataset import download_and_load_images_from_url, download_and_loa
 from src.data.anime_dataset import AnimeDataset
 from src.visualization.utils import plot_images_from_zip, plot_random_images, plot_losses, get_predictions
 from src.visualization.accuracy_and_cost import plot_accuracy_and_cost
-from src.visualization.confusion_matrix import plot_confusion_matrix, plot_confusion_matrix_with_stats
-from src.visualization.precision_and_recall import plot_precision, plot_recall, plot_precision_recall_combined, print_classification_report
+from src.visualization.confusion_matrix import plot_confusion_matrix, plot_top_confused_pairs
+from src.visualization.precision_and_recall import (
+    plot_precision_recall_combined,
+    save_metrics_html_report,
+)
 
 from src.models.cnn import AnimeCNN
 
@@ -85,9 +88,14 @@ def main():
     print("Plotting confusion matrix...")
     plot_confusion_matrix(predictions, labels, class_names=class_names)
 
+    print("Plotting top confused pairs...")
+    plot_top_confused_pairs(predictions, labels, class_names=class_names)
+
     print("Plotting precision and recall...")
     plot_precision_recall_combined(predictions, labels, class_names=class_names)
-    print_classification_report(predictions, labels, class_names=class_names)
+
+    print("Saving scrollable HTML metrics report...")
+    save_metrics_html_report(predictions, labels, class_names=class_names)
 
     print(f"\nFinal accuracy: {accuracy_list[-1]:.4f}")
 
