@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 from src.visualization.display import show_saved_figure
 
 
-def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path='outputs/accuracy_and_cost.png'):
+def plot_accuracy_and_cost(
+    cost_list, accuracy_list, show=True, save_path="outputs/accuracy_and_cost.png"
+):
     """
     Plot training cost and accuracy over epochs.
 
@@ -29,24 +31,26 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path='outpu
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
-    cost_line, = ax1.plot(epochs, cost_list, color='tab:red', marker='o', label='Cost')
-    ax1.set_xlabel('Epoch')
-    ax1.set_ylabel('Cost', color='tab:red')
-    ax1.tick_params(axis='y', labelcolor='tab:red')
+    (cost_line,) = ax1.plot(
+        epochs, cost_list, color="tab:red", marker="o", label="Cost"
+    )
+    ax1.set_xlabel("Epoch")
+    ax1.set_ylabel("Cost", color="tab:red")
+    ax1.tick_params(axis="y", labelcolor="tab:red")
 
     ax2 = ax1.twinx()
-    accuracy_line, = ax2.plot(
-        epochs, accuracy_percent, color='tab:blue', marker='o', label='Accuracy'
+    (accuracy_line,) = ax2.plot(
+        epochs, accuracy_percent, color="tab:blue", marker="o", label="Accuracy"
     )
-    ax2.set_ylabel('Accuracy (%)', color='tab:blue')
-    ax2.tick_params(axis='y', labelcolor='tab:blue')
+    ax2.set_ylabel("Accuracy (%)", color="tab:blue")
+    ax2.tick_params(axis="y", labelcolor="tab:blue")
     ax2.set_ylim(0, 105)
 
-    fig.suptitle('Training Progress', fontsize=14, y=0.98)
+    fig.suptitle("Training Progress", fontsize=14, y=0.98)
     fig.legend(
         [cost_line, accuracy_line],
-        ['Cost', 'Accuracy'],
-        loc='upper center',
+        ["Cost", "Accuracy"],
+        loc="upper center",
         bbox_to_anchor=(0.5, 0.90),
         ncol=2,
         frameon=False,
@@ -54,8 +58,8 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path='outpu
     fig.tight_layout(rect=[0, 0, 1, 0.88])
 
     if save_path:
-        os.makedirs(os.path.dirname(save_path) or '.', exist_ok=True)
-        fig.savefig(save_path, bbox_inches='tight', dpi=150)
+        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
+        fig.savefig(save_path, bbox_inches="tight", dpi=150)
         print(f"  Saved: {save_path}")
     show_saved_figure(save_path, show=show)
     plt.close(fig)

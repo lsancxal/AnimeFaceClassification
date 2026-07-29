@@ -17,12 +17,9 @@ from src.config import (
 class AnimeCNN(nn.Module):
     def __init__(self, num_classes):
         super(AnimeCNN, self).__init__()
-        # if num_classes is None:
-        #     num_classes = len(CLASS_NAMES)
 
         flattened_size = CONV2_OUT_CHANNELS * FEATURE_MAP_SIZE * FEATURE_MAP_SIZE
 
-        # padding keeps spatial size the same through each conv
         self.conv1 = nn.Conv2d(
             INPUT_CHANNELS, CONV1_OUT_CHANNELS, KERNEL_SIZE, STRIDE, padding=PADDING
         )

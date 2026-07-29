@@ -17,7 +17,7 @@ class AnimeDataset(Dataset):
     def _get_zip_ref(self):
         # Reuse one ZipFile handle per worker instead of reopening every sample.
         if self._zip_ref is None:
-            self._zip_ref = zipfile.ZipFile(self.zip_file_path, 'r')
+            self._zip_ref = zipfile.ZipFile(self.zip_file_path, "r")
         return self._zip_ref
 
     def __len__(self):
@@ -28,7 +28,7 @@ class AnimeDataset(Dataset):
         zip_ref = self._get_zip_ref()
 
         with zip_ref.open(file_name) as f:
-            image = Image.open(io.BytesIO(f.read())).convert('RGB')
+            image = Image.open(io.BytesIO(f.read())).convert("RGB")
 
         if self.transform:
             image = self.transform(image)

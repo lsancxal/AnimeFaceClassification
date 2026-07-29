@@ -11,13 +11,13 @@ def show_saved_figure(save_path, show=True):
         return
 
     print(f"  Opening: {absolute_path}")
-    if os.name == 'nt':
+    if os.name == "nt":
         os.startfile(absolute_path)
     else:
         import subprocess
         import sys
 
-        if sys.platform == 'darwin':
-            subprocess.run(['open', absolute_path], check=False)
+        if sys.platform == "darwin":
+            subprocess.run(["open", absolute_path], check=False)
         else:
-            subprocess.run(['xdg-open', absolute_path], check=False)
+            subprocess.run(["xdg-open", absolute_path], check=False)

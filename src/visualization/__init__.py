@@ -1,30 +1,18 @@
-from .utils import plot_images_from_zip, plot_random_images, plot_losses, get_predictions
+from .utils import plot_random_images, plot_losses, get_predictions
 from .accuracy_and_cost import plot_accuracy_and_cost
-from .confusion_matrix import (
-    plot_confusion_matrix,
-    plot_confusion_matrix_with_stats,
-    plot_top_confused_pairs,
-)
+from .confusion_matrix import plot_confusion_matrix, plot_top_confused_pairs
 from .precision_and_recall import (
-    plot_precision,
-    plot_recall,
     plot_precision_recall_combined,
-    print_classification_report,
     save_metrics_html_report,
 )
 
 __all__ = [
-    'plot_images_from_zip',
-    'plot_random_images',
-    'plot_losses',
-    'plot_accuracy_and_cost',
-    'plot_confusion_matrix',
-    'plot_confusion_matrix_with_stats',
-    'plot_top_confused_pairs',
-    'get_predictions',
-    'plot_precision',
-    'plot_recall',
-    'plot_precision_recall_combined',
-    'print_classification_report',
-    'save_metrics_html_report',
+    "plot_random_images",
+    "plot_losses",
+    "plot_accuracy_and_cost",
+    "plot_confusion_matrix",
+    "plot_top_confused_pairs",
+    "get_predictions",
+    "plot_precision_recall_combined",
+    "save_metrics_html_report",
 ]

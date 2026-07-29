@@ -1,3 +1,3 @@
 from .cnn import AnimeCNN
 
-__all__ = ['AnimeCNN']
+__all__ = ["AnimeCNN"]
