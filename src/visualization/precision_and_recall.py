@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, f1_score
 
+from src.config import BATCH_NORM, LEAKY_RELU, LEAKY_SLOPE
 from src.visualization.display import show_saved_figure
 from src.visualization.paths import add_run_timestamp, get_run_timestamp, output_path
 
@@ -152,6 +153,10 @@ def save_metrics_html_report(
 
     overall_accuracy = (predictions == labels).sum() / max(len(labels), 1)
     run_stamp = get_run_timestamp()
+    batch_norm_label = "Yes" if BATCH_NORM else "No"
+    leaky_relu_label = (
+        f"Yes (slope={LEAKY_SLOPE})" if LEAKY_RELU else "No"
+    )
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -216,6 +221,8 @@ def save_metrics_html_report(
     <h1>Classification Metrics Report</h1>
     <div class="summary">
       <div class="pill">Run: {run_stamp}</div>
+      <div class="pill">Batch Norm: {batch_norm_label}</div>
+      <div class="pill">Leaky ReLU: {leaky_relu_label}</div>
       <div class="pill">Classes: {len(class_names)}</div>
       <div class="pill">Accuracy: {overall_accuracy:.2%}</div>
       <div class="pill">Macro Precision: {metrics['macro_precision']:.2%}</div>
