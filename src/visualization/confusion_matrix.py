@@ -8,6 +8,7 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
 from src.visualization.display import show_saved_figure
+from src.visualization.paths import add_run_timestamp, output_path
 
 
 def _confusion_figsize(n_classes, base=0.28, min_size=10, max_size=40):
@@ -22,7 +23,7 @@ def plot_confusion_matrix(
     normalize=True,
     figsize=None,
     show=True,
-    save_path="outputs/confusion_matrix.png",
+    save_path=None,
     annot_threshold=20,
 ):
     """
@@ -31,6 +32,9 @@ def plot_confusion_matrix(
     For many classes, cell annotations are disabled and the figure is scaled up
     so labels stay readable when zooming the saved image.
     """
+    if save_path is None:
+        save_path = output_path("confusion_matrix.png")
+
     n_classes = len(class_names)
     if figsize is None:
         figsize = _confusion_figsize(n_classes)
@@ -70,6 +74,7 @@ def plot_confusion_matrix(
     plt.xticks(rotation=90, ha="center")
     plt.yticks(rotation=0)
     fig.tight_layout()
+    add_run_timestamp(fig)
 
     if save_path:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
@@ -88,9 +93,12 @@ def plot_top_confused_pairs(
     top_k=25,
     figsize=(12, 8),
     show=True,
-    save_path="outputs/top_confused_pairs.png",
+    save_path=None,
 ):
     """Plot the most common off-diagonal confusions."""
+    if save_path is None:
+        save_path = output_path("top_confused_pairs.png")
+
     n_classes = len(class_names)
     cm = confusion_matrix(labels, predictions, labels=list(range(n_classes)))
 
@@ -127,6 +135,7 @@ def plot_top_confused_pairs(
         ax.text(count + 0.1, yi, str(count), va="center", fontsize=8)
 
     fig.tight_layout()
+    add_run_timestamp(fig)
     if save_path:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
         fig.savefig(save_path, bbox_inches="tight", dpi=150)

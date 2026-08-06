@@ -35,10 +35,8 @@ def train_and_evaluate(
     num_epochs=NUM_EPOCHS,
     learning_rate=LEARNING_RATE,
 ):
-    print("Moving model to device...")
     model = model.to(DEVICE)
 
-    print("Defining loss function and optimizer...")
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -48,7 +46,6 @@ def train_and_evaluate(
 
     start_time = time.time()
 
-    print("Training loop...")
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -65,7 +62,6 @@ def train_and_evaluate(
         train_loss = running_loss / len(train_loader)
         train_losses.append(train_loss)
 
-        print("Evaluating model...")
         model.eval()
         val_loss = 0.0
         with torch.no_grad():

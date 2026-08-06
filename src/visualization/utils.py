@@ -9,6 +9,7 @@ from PIL import Image
 
 from src.config import DEVICE, RANDOM_SEED
 from src.visualization.display import show_saved_figure
+from src.visualization.paths import add_run_timestamp, output_path
 
 
 def get_predictions(model, data_loader):
@@ -45,9 +46,12 @@ def plot_random_images(
     cols=10,
     seed=RANDOM_SEED,
     show=True,
-    save_path="outputs/random_images.png",
+    save_path=None,
 ):
     """Plot a random sample of images from the archive without loading all images into RAM."""
+    if save_path is None:
+        save_path = output_path("random_images.png")
+
     if not samples:
         raise ValueError("No images available to plot.")
 
@@ -71,6 +75,7 @@ def plot_random_images(
         ax.axis("off")
 
     fig.tight_layout()
+    add_run_timestamp(fig)
 
     if save_path:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
@@ -84,9 +89,10 @@ def plot_random_images(
     return fig
 
 
-def plot_losses(
-    train_losses, val_losses, show=True, save_path="outputs/training_losses.png"
-):
+def plot_losses(train_losses, val_losses, show=True, save_path=None):
+    if save_path is None:
+        save_path = output_path("training_losses.png")
+
     fig, ax = plt.subplots(figsize=(10, 5))
     ax.plot(train_losses, label="Training Loss")
     ax.plot(val_losses, label="Validation Loss", linestyle="--")
@@ -96,6 +102,7 @@ def plot_losses(
     ax.grid(True)
     ax.set_title("Training and Validation Loss")
     fig.tight_layout()
+    add_run_timestamp(fig)
 
     if save_path:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)

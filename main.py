@@ -19,36 +19,34 @@ from src.visualization.precision_and_recall import (
 )
 from src.models.cnn import AnimeCNN
 from src.training import train_and_evaluate
-from src.config import RANDOM_SEED, DEVICE, ZIP_FILE_PATH
+from src.config import RANDOM_SEED, DEVICE, ZIP_FILE_PATH, BATCH_NORM, LEAKY_RELU
+from src.visualization.paths import set_run_timestamp
 
 
 def main():
     print("Starting...")
+    run_stamp = set_run_timestamp()
+    print(f"Run timestamp: {run_stamp}")
 
     np.random.seed(RANDOM_SEED)
     torch.manual_seed(RANDOM_SEED)
 
     print(f"Using device:{DEVICE}")
 
-    print("Loading images from path...")
     samples, class_names = build_samples_from_zip(ZIP_FILE_PATH)
     print(f"Using {len(class_names)} classes")
 
     print("Plotting random images from archive...")
     plot_random_images(ZIP_FILE_PATH, samples, class_names, show=True)
 
-    print("Defining transforms...")
     transform = define_transforms()
-
-    print("Loading dataset...")
     dataset = AnimeDataset(ZIP_FILE_PATH, samples, class_names, transform=transform)
-
-    print("Getting dataloaders...")
     train_loader, val_loader = get_dataloaders(dataset)
-
-    print("Instantiating model...")
     model = AnimeCNN(num_classes=len(class_names))
+    print(f"Using batch normalization: {BATCH_NORM}")
+    print(f"Using leaky ReLU: {LEAKY_RELU}")
     print(f"Model architecture: \n{model}\n")
+
 
     print("Training and evaluating model...")
     train_losses, val_losses, accuracy_list = train_and_evaluate(

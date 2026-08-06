@@ -3,23 +3,25 @@ import os
 import matplotlib.pyplot as plt
 
 from src.visualization.display import show_saved_figure
+from src.visualization.paths import add_run_timestamp, output_path
 
 
-def plot_accuracy_and_cost(
-    cost_list, accuracy_list, show=True, save_path="outputs/accuracy_and_cost.png"
-):
+def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
     """
     Plot training cost and accuracy over epochs.
 
     Args:
         cost_list: List of cost values per epoch.
         accuracy_list: List of accuracy values per epoch (0-1 scale).
-        show: Whether to call plt.show().
-        save_path: Path to save the figure. Pass None to skip saving.
+        show: Whether to open the saved figure.
+        save_path: Path to save the figure. Pass None for outputs/accuracy_and_cost.png.
 
     Returns:
         fig: The matplotlib figure.
     """
+    if save_path is None:
+        save_path = output_path("accuracy_and_cost.png")
+
     if len(cost_list) != len(accuracy_list):
         raise ValueError(
             f"cost_list and accuracy_list must have the same length "
@@ -56,6 +58,7 @@ def plot_accuracy_and_cost(
         frameon=False,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.88])
+    add_run_timestamp(fig)
 
     if save_path:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)

@@ -1,40 +1,53 @@
 import torch.nn as nn
-import torch.nn.functional as F
 
 from src.config import (
-    INPUT_CHANNELS,
-    CONV1_OUT_CHANNELS,
-    CONV2_OUT_CHANNELS,
+    CONV_CHANNELS,
     KERNEL_SIZE,
     STRIDE,
     PADDING,
     POOL_SIZE,
+    IMAGE_SIZE,
     FC_HIDDEN_SIZE,
-    FEATURE_MAP_SIZE,
+    LEAKY_SLOPE,
+    BATCH_NORM,
+    LEAKY_RELU,
 )
+
+
+def _activation():
+    if LEAKY_RELU:
+        return nn.LeakyReLU(LEAKY_SLOPE)
+    return nn.ReLU()
 
 
 class AnimeCNN(nn.Module):
     def __init__(self, num_classes):
         super(AnimeCNN, self).__init__()
 
-        flattened_size = CONV2_OUT_CHANNELS * FEATURE_MAP_SIZE * FEATURE_MAP_SIZE
+        conv_layers = []
+        for in_ch, out_ch in zip(CONV_CHANNELS[:-1], CONV_CHANNELS[1:]):
+            conv_layers.append(
+                nn.Conv2d(in_ch, out_ch, KERNEL_SIZE, STRIDE, padding=PADDING)
+            )
+            if BATCH_NORM:
+                conv_layers.append(nn.BatchNorm2d(out_ch))
+            conv_layers.append(_activation())
+            conv_layers.append(nn.MaxPool2d(POOL_SIZE, POOL_SIZE))
 
-        self.conv1 = nn.Conv2d(
-            INPUT_CHANNELS, CONV1_OUT_CHANNELS, KERNEL_SIZE, STRIDE, padding=PADDING
+        self.features = nn.Sequential(*conv_layers)
+
+        num_pools = len(CONV_CHANNELS) - 1
+        feature_map_size = IMAGE_SIZE // (POOL_SIZE**num_pools)
+        flattened_size = CONV_CHANNELS[-1] * feature_map_size * feature_map_size
+
+        self.classifier = nn.Sequential(
+            nn.Linear(flattened_size, FC_HIDDEN_SIZE),
+            _activation(),
+            nn.Linear(FC_HIDDEN_SIZE, num_classes),
         )
-        self.conv2 = nn.Conv2d(
-            CONV1_OUT_CHANNELS, CONV2_OUT_CHANNELS, KERNEL_SIZE, STRIDE, padding=PADDING
-        )
-        self.pool = nn.MaxPool2d(POOL_SIZE, POOL_SIZE)
-        self.fc1 = nn.Linear(flattened_size, FC_HIDDEN_SIZE)
-        self.fc2 = nn.Linear(FC_HIDDEN_SIZE, num_classes)
-        self.flattened_size = flattened_size
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, self.flattened_size)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        x = self.classifier(x)
         return x

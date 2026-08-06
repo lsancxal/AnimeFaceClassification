@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, recall_score, f1_score
 
 from src.visualization.display import show_saved_figure
+from src.visualization.paths import add_run_timestamp, get_run_timestamp, output_path
 
 
 def calculate_precision_recall(predictions, labels, class_names):
@@ -38,13 +39,16 @@ def plot_precision_recall_combined(
     class_names,
     figsize=None,
     show=True,
-    save_path="outputs/precision_recall_combined.png",
+    save_path=None,
     sort_by="f1",
 ):
     """
     Plot precision and recall as a tall horizontal bar chart.
     Classes are sorted by F1 by default so weak classes are easy to find.
     """
+    if save_path is None:
+        save_path = output_path("precision_recall_combined.png")
+
     metrics = calculate_precision_recall(predictions, labels, class_names)
     precision, recall, f1 = metrics["precision"], metrics["recall"], metrics["f1"]
 
@@ -105,6 +109,7 @@ def plot_precision_recall_combined(
     ax.legend(loc="lower right")
     ax.grid(axis="x", alpha=0.3)
     fig.tight_layout()
+    add_run_timestamp(fig)
 
     if save_path:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
@@ -120,10 +125,13 @@ def save_metrics_html_report(
     predictions,
     labels,
     class_names,
-    save_path="outputs/metrics_report.html",
+    save_path=None,
     show=True,
 ):
     """Save a scrollable HTML report with per-class metrics."""
+    if save_path is None:
+        save_path = output_path("metrics_report.html")
+
     metrics = calculate_precision_recall(predictions, labels, class_names)
     precision = metrics["precision"]
     recall = metrics["recall"]
@@ -143,6 +151,7 @@ def save_metrics_html_report(
         )
 
     overall_accuracy = (predictions == labels).sum() / max(len(labels), 1)
+    run_stamp = get_run_timestamp()
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -206,6 +215,7 @@ def save_metrics_html_report(
   <div class="card">
     <h1>Classification Metrics Report</h1>
     <div class="summary">
+      <div class="pill">Run: {run_stamp}</div>
       <div class="pill">Classes: {len(class_names)}</div>
       <div class="pill">Accuracy: {overall_accuracy:.2%}</div>
       <div class="pill">Macro Precision: {metrics['macro_precision']:.2%}</div>
