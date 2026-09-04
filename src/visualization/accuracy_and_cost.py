@@ -1,24 +1,20 @@
-import os
+"""Training progress plots."""
+
+from __future__ import annotations
 
 import matplotlib.pyplot as plt
 
-from src.visualization.display import show_saved_figure
-from src.visualization.paths import add_run_timestamp, output_path
+from src.visualization.io import save_and_show_figure
+from src.visualization.paths import output_path
 
 
-def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
-    """
-    Plot training cost and accuracy over epochs.
-
-    Args:
-        cost_list: List of cost values per epoch.
-        accuracy_list: List of accuracy values per epoch (0-1 scale).
-        show: Whether to open the saved figure.
-        save_path: Path to save the figure. Pass None for outputs/accuracy_and_cost.png.
-
-    Returns:
-        fig: The matplotlib figure.
-    """
+def plot_accuracy_and_cost(
+    cost_list: list[float],
+    accuracy_list: list[float],
+    show: bool = True,
+    save_path: str | None = None,
+):
+    """Plot training cost and accuracy over epochs."""
     if save_path is None:
         save_path = output_path("accuracy_and_cost.png")
 
@@ -32,7 +28,6 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
     accuracy_percent = [acc * 100 for acc in accuracy_list]
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
-
     (cost_line,) = ax1.plot(
         epochs, cost_list, color="tab:red", marker="o", label="Cost"
     )
@@ -42,7 +37,11 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
 
     ax2 = ax1.twinx()
     (accuracy_line,) = ax2.plot(
-        epochs, accuracy_percent, color="tab:blue", marker="o", label="Accuracy"
+        epochs,
+        accuracy_percent,
+        color="tab:blue",
+        marker="o",
+        label="Accuracy",
     )
     ax2.set_ylabel("Accuracy (%)", color="tab:blue")
     ax2.tick_params(axis="y", labelcolor="tab:blue")
@@ -58,13 +57,5 @@ def plot_accuracy_and_cost(cost_list, accuracy_list, show=True, save_path=None):
         frameon=False,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.88])
-    add_run_timestamp(fig)
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-        fig.savefig(save_path, bbox_inches="tight", dpi=150)
-        print(f"  Saved: {save_path}")
-    show_saved_figure(save_path, show=show)
-    plt.close(fig)
-
+    save_and_show_figure(fig, save_path, show=show)
     return fig

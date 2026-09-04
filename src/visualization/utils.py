@@ -1,54 +1,27 @@
-import io
-import os
-import zipfile
+"""Dataset preview and training-curve plots."""
+
+from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
 from PIL import Image
 
-from src.config import DEVICE, RANDOM_SEED
-from src.visualization.display import show_saved_figure
-from src.visualization.paths import add_run_timestamp, output_path
-
-
-def get_predictions(model, data_loader):
-    """Get all predictions and true labels from the model."""
-    model.eval()
-    all_predictions = []
-    all_labels = []
-
-    with torch.no_grad():
-        for x, y in data_loader:
-            x = x.to(DEVICE)
-            output = model(x)
-            _, predicted = torch.max(output, 1)
-            all_predictions.append(predicted.cpu())
-            all_labels.append(y)
-
-    return (
-        torch.cat(all_predictions).numpy(),
-        torch.cat(all_labels).numpy(),
-    )
-
-
-def _load_image_from_zip(zip_ref, file_name):
-    with zip_ref.open(file_name) as f:
-        return np.array(Image.open(io.BytesIO(f.read())).convert("RGB"))
+from src.config import RANDOM_SEED
+from src.visualization.io import save_and_show_figure
+from src.visualization.paths import output_path
 
 
 def plot_random_images(
-    zip_file_path,
-    samples,
-    class_names,
-    num_images=50,
-    rows=5,
-    cols=10,
-    seed=RANDOM_SEED,
-    show=True,
-    save_path=None,
+    samples: list[tuple[str, int]],
+    class_names: list[str],
+    num_images: int = 50,
+    rows: int = 5,
+    cols: int = 10,
+    seed: int = RANDOM_SEED,
+    show: bool = True,
+    save_path: str | None = None,
 ):
-    """Plot a random sample of images from the archive without loading all images into RAM."""
+    """Plot a random sample of images from disk without loading all into RAM."""
     if save_path is None:
         save_path = output_path("random_images.png")
 
@@ -62,34 +35,29 @@ def plot_random_images(
 
     fig, axes = plt.subplots(rows, cols, figsize=(cols * 1.2, rows * 1.4))
     axes = np.atleast_1d(axes).flatten()
-    fig.suptitle(f"Random {sample_size} Images from Archive", fontsize=16)
+    fig.suptitle(f"Random {sample_size} Images from Dataset", fontsize=16)
 
-    with zipfile.ZipFile(zip_file_path, "r") as zip_ref:
-        for ax, (file_name, label) in zip(axes, selected_samples):
-            image = _load_image_from_zip(zip_ref, file_name)
-            ax.imshow(image)
-            ax.set_title(class_names[label], fontsize=8)
-            ax.axis("off")
+    for ax, (file_path, label) in zip(axes, selected_samples):
+        with Image.open(file_path) as image:
+            ax.imshow(np.array(image.convert("RGB")))
+        ax.set_title(class_names[label], fontsize=8)
+        ax.axis("off")
 
     for ax in axes[sample_size:]:
         ax.axis("off")
 
     fig.tight_layout()
-    add_run_timestamp(fig)
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-        fig.savefig(save_path, bbox_inches="tight", dpi=150)
-        print(f"  Saved: {save_path}")
-
-    show_saved_figure(save_path, show=show)
-    plt.close(fig)
+    save_and_show_figure(fig, save_path, show=show)
     plt.close("all")
-
     return fig
 
 
-def plot_losses(train_losses, val_losses, show=True, save_path=None):
+def plot_losses(
+    train_losses: list[float],
+    val_losses: list[float],
+    show: bool = True,
+    save_path: str | None = None,
+):
     if save_path is None:
         save_path = output_path("training_losses.png")
 
@@ -102,13 +70,5 @@ def plot_losses(train_losses, val_losses, show=True, save_path=None):
     ax.grid(True)
     ax.set_title("Training and Validation Loss")
     fig.tight_layout()
-    add_run_timestamp(fig)
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-        fig.savefig(save_path, bbox_inches="tight", dpi=150)
-        print(f"  Saved: {save_path}")
-    show_saved_figure(save_path, show=show)
-    plt.close(fig)
-
+    save_and_show_figure(fig, save_path, show=show)
     return fig

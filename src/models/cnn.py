@@ -1,53 +1,57 @@
+"""Anime face classification CNN."""
+
+from __future__ import annotations
+
+import torch
 import torch.nn as nn
 
 from src.config import (
+    BLOCKS_PER_STAGE,
     CONV_CHANNELS,
-    KERNEL_SIZE,
-    STRIDE,
-    PADDING,
-    POOL_SIZE,
-    IMAGE_SIZE,
+    DROPOUT,
     FC_HIDDEN_SIZE,
-    LEAKY_SLOPE,
-    BATCH_NORM,
-    LEAKY_RELU,
+    POOL_AFTER_STAGE,
+    POOL_SIZE,
 )
-
-
-def _activation():
-    if LEAKY_RELU:
-        return nn.LeakyReLU(LEAKY_SLOPE)
-    return nn.ReLU()
+from src.models.blocks import ResidualBlock, make_activation
 
 
 class AnimeCNN(nn.Module):
-    def __init__(self, num_classes):
-        super(AnimeCNN, self).__init__()
+    """Residual CNN with global average pooling and a compact classifier head."""
 
-        conv_layers = []
-        for in_ch, out_ch in zip(CONV_CHANNELS[:-1], CONV_CHANNELS[1:]):
-            conv_layers.append(
-                nn.Conv2d(in_ch, out_ch, KERNEL_SIZE, STRIDE, padding=PADDING)
+    def __init__(self, num_classes: int) -> None:
+        super().__init__()
+
+        if len(POOL_AFTER_STAGE) != len(CONV_CHANNELS) - 1:
+            raise ValueError(
+                "POOL_AFTER_STAGE must have one entry per stage "
+                f"(got {len(POOL_AFTER_STAGE)}, expected {len(CONV_CHANNELS) - 1})."
             )
-            if BATCH_NORM:
-                conv_layers.append(nn.BatchNorm2d(out_ch))
-            conv_layers.append(_activation())
-            conv_layers.append(nn.MaxPool2d(POOL_SIZE, POOL_SIZE))
 
-        self.features = nn.Sequential(*conv_layers)
+        stages: list[nn.Module] = []
+        for stage_idx, (in_ch, out_ch) in enumerate(
+            zip(CONV_CHANNELS[:-1], CONV_CHANNELS[1:])
+        ):
+            blocks: list[nn.Module] = [ResidualBlock(in_ch, out_ch)]
+            for _ in range(BLOCKS_PER_STAGE - 1):
+                blocks.append(ResidualBlock(out_ch, out_ch))
+            if POOL_AFTER_STAGE[stage_idx]:
+                blocks.append(nn.MaxPool2d(POOL_SIZE, POOL_SIZE))
+            stages.append(nn.Sequential(*blocks))
 
-        num_pools = len(CONV_CHANNELS) - 1
-        feature_map_size = IMAGE_SIZE // (POOL_SIZE**num_pools)
-        flattened_size = CONV_CHANNELS[-1] * feature_map_size * feature_map_size
-
+        self.features = nn.Sequential(*stages)
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.dropout = nn.Dropout(DROPOUT)
         self.classifier = nn.Sequential(
-            nn.Linear(flattened_size, FC_HIDDEN_SIZE),
-            _activation(),
+            nn.Linear(CONV_CHANNELS[-1], FC_HIDDEN_SIZE),
+            make_activation(),
+            nn.Dropout(DROPOUT),
             nn.Linear(FC_HIDDEN_SIZE, num_classes),
         )
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
-        x = x.view(x.size(0), -1)
-        x = self.classifier(x)
-        return x
+        x = self.pool(x)
+        x = torch.flatten(x, 1)
+        x = self.dropout(x)
+        return self.classifier(x)

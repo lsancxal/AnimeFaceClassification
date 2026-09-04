@@ -1,0 +1,1 @@
+"""Anime face classification package."""

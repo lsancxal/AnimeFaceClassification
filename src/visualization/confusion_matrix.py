@@ -1,17 +1,19 @@
 """Confusion matrix visualization for multi-class classification."""
 
-import os
+from __future__ import annotations
 
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-from src.visualization.display import show_saved_figure
-from src.visualization.paths import add_run_timestamp, output_path
+from src.visualization.io import save_and_show_figure
+from src.visualization.paths import output_path
 
 
-def _confusion_figsize(n_classes, base=0.28, min_size=10, max_size=40):
+def _confusion_figsize(
+    n_classes: int, base: float = 0.28, min_size: float = 10, max_size: float = 40
+) -> tuple[float, float]:
     size = min(max(min_size, n_classes * base), max_size)
     return (size, size)
 
@@ -20,11 +22,11 @@ def plot_confusion_matrix(
     predictions,
     labels,
     class_names,
-    normalize=True,
+    normalize: bool = True,
     figsize=None,
-    show=True,
-    save_path=None,
-    annot_threshold=20,
+    show: bool = True,
+    save_path: str | None = None,
+    annot_threshold: int = 20,
 ):
     """
     Plot confusion matrix from pre-computed predictions.
@@ -74,15 +76,7 @@ def plot_confusion_matrix(
     plt.xticks(rotation=90, ha="center")
     plt.yticks(rotation=0)
     fig.tight_layout()
-    add_run_timestamp(fig)
-
-    if save_path:
-        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-        fig.savefig(save_path, bbox_inches="tight", dpi=200)
-        print(f"  Saved: {save_path}")
-    show_saved_figure(save_path, show=show)
-    plt.close(fig)
-
+    save_and_show_figure(fig, save_path, show=show, dpi=200)
     return fig, cm
 
 
@@ -90,10 +84,10 @@ def plot_top_confused_pairs(
     predictions,
     labels,
     class_names,
-    top_k=25,
+    top_k: int = 25,
     figsize=(12, 8),
-    show=True,
-    save_path=None,
+    show: bool = True,
+    save_path: str | None = None,
 ):
     """Plot the most common off-diagonal confusions."""
     if save_path is None:
@@ -135,11 +129,5 @@ def plot_top_confused_pairs(
         ax.text(count + 0.1, yi, str(count), va="center", fontsize=8)
 
     fig.tight_layout()
-    add_run_timestamp(fig)
-    if save_path:
-        os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-        fig.savefig(save_path, bbox_inches="tight", dpi=150)
-        print(f"  Saved: {save_path}")
-    show_saved_figure(save_path, show=show)
-    plt.close(fig)
+    save_and_show_figure(fig, save_path, show=show)
     return fig
