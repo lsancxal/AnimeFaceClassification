@@ -10,6 +10,7 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       MPLBACKEND: Agg
+      SHOW_FIGURES: "0"
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: compute,utility
     shm_size: "2gb"
