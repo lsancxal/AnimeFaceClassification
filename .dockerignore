@@ -1,0 +1,13 @@
+.git
+.gitignore
+.cursor
+**/__pycache__/
+**/*.py[cod]
+**/*.pt
+**/*.pth
+outputs/
+src/data/extracted/
+.venv/
+venv/
+*.md
+.env

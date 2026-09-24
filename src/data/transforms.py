@@ -20,11 +20,11 @@ def define_train_transforms(
     """Augmented transforms for training only."""
     return transforms.Compose(
         [
-            transforms.RandomResizedCrop(image_size, scale=(0.85, 1.0)),
+            transforms.RandomResizedCrop(image_size, scale=(0.9, 1.0)),
             transforms.RandomHorizontalFlip(p=0.5),
             transforms.RandomRotation(degrees=12),
             transforms.ColorJitter(
-                brightness=0.25, contrast=0.25, saturation=0.25, hue=0.05
+                brightness=0.25, contrast=0.25, saturation=0.1, hue=0.02
             ),
             transforms.ToTensor(),
             _normalize(normalize_mean, normalize_std),

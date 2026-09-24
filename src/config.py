@@ -7,7 +7,7 @@ import torch
 # Data settings
 ZIP_FILE_PATH = "src/data/archive.zip"
 DATASET_DIR = "src/data/extracted"
-IMAGE_SIZE = 128
+IMAGE_SIZE = 160
 BATCH_SIZE = 48
 TEST_SIZE = 0.2
 NORMALIZE_MEAN = 0.5
