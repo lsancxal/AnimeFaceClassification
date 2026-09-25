@@ -56,6 +56,6 @@ def plot_accuracy_and_cost(
         ncol=2,
         frameon=False,
     )
-    fig.tight_layout(rect=[0, 0, 1, 0.88])
+    fig.tight_layout(rect=[0.02, 0.04, 0.98, 0.88])
     save_and_show_figure(fig, save_path, show=show)
     return fig

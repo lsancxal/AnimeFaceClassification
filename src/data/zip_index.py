@@ -26,17 +26,12 @@ def extract_zip_to_disk(
     """
     Extract the archive to disk once and reuse it on later runs.
 
-    Returns the absolute path to the extracted dataset root
-    (``extract_dir/dataset``).
+    Returns the path to the extracted dataset root (``extract_dir/dataset``).
     """
     dataset_root = os.path.join(extract_dir, "dataset")
     marker_path = os.path.join(extract_dir, ".extract_complete")
 
-    if (
-        not force
-        and os.path.isdir(dataset_root)
-        and os.path.isfile(marker_path)
-    ):
+    if not force and os.path.isdir(dataset_root) and os.path.isfile(marker_path):
         print(f"Using extracted dataset at: {dataset_root}")
         return dataset_root
 
@@ -64,8 +59,6 @@ def build_samples_from_directory(
     Index image paths and class labels from an extracted folder.
 
     Expected layout: ``<dataset_root>/<class_name>/<image>``.
-    Returns ``(samples, class_names)`` where each sample is
-    ``(absolute_path, label_idx)``.
     """
     class_names: set[str] = set()
     image_files: list[tuple[str, str]] = []
@@ -84,8 +77,7 @@ def build_samples_from_directory(
     sorted_class_names = sorted(class_names)
     class_to_index = {name: idx for idx, name in enumerate(sorted_class_names)}
     samples = [
-        (file_path, class_to_index[class_name])
-        for file_path, class_name in image_files
+        (file_path, class_to_index[class_name]) for file_path, class_name in image_files
     ]
     return samples, sorted_class_names
 
@@ -95,9 +87,7 @@ def prepare_dataset(
     extract_dir: str = DATASET_DIR,
     force: bool = False,
 ) -> tuple[str, list[tuple[str, int]], list[str]]:
-    """
-    Ensure the ZIP is extracted, then return ``(dataset_root, samples, class_names)``.
-    """
+    """Ensure the ZIP is extracted, then return root, samples, and class names."""
     dataset_root = extract_zip_to_disk(
         zip_file_path=zip_file_path,
         extract_dir=extract_dir,
@@ -105,13 +95,3 @@ def prepare_dataset(
     )
     samples, class_names = build_samples_from_directory(dataset_root)
     return dataset_root, samples, class_names
-
-
-def build_samples_from_zip(
-    zip_file_path: str,
-) -> tuple[list[tuple[str, int]], list[str]]:
-    """
-    Backward-compatible helper: extract ZIP if needed, then index from disk.
-    """
-    _, samples, class_names = prepare_dataset(zip_file_path=zip_file_path)
-    return samples, class_names

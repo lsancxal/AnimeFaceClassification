@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
-
 import torch
 import torch.nn as nn
 
 from src.config import (
+    ALLOW_TF32,
     CUDNN_BENCHMARK,
     DEVICE,
     TORCH_COMPILE,
@@ -18,10 +17,14 @@ from src.config import (
 
 def enable_performance_features() -> None:
     """Apply global PyTorch performance settings once at startup."""
-    if torch.cuda.is_available():
-        torch.backends.cudnn.benchmark = CUDNN_BENCHMARK
-        if hasattr(torch, "set_float32_matmul_precision"):
-            torch.set_float32_matmul_precision("high")
+    if not torch.cuda.is_available():
+        return
+
+    torch.backends.cudnn.benchmark = CUDNN_BENCHMARK
+    torch.backends.cuda.matmul.allow_tf32 = ALLOW_TF32
+    torch.backends.cudnn.allow_tf32 = ALLOW_TF32
+    if hasattr(torch, "set_float32_matmul_precision"):
+        torch.set_float32_matmul_precision("high")
 
 
 def optimize_model(model: nn.Module) -> nn.Module:
@@ -54,8 +57,3 @@ def create_grad_scaler() -> torch.amp.GradScaler:
 def autocast_context():
     enabled = USE_AMP and DEVICE.type == "cuda"
     return torch.autocast(device_type=DEVICE.type, enabled=enabled)
-
-
-def suggested_num_workers() -> int:
-    cpu_count = os.cpu_count() or 4
-    return min(8, max(4, cpu_count // 2))

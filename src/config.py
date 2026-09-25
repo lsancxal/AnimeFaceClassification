@@ -1,14 +1,15 @@
 """Configuration and hyperparameters for training."""
 
 import os
+import sys
 
 import torch
 
 # Data settings
 ZIP_FILE_PATH = "src/data/archive.zip"
 DATASET_DIR = "src/data/extracted"
-IMAGE_SIZE = 160
-BATCH_SIZE = 48
+IMAGE_SIZE = 96
+BATCH_SIZE = 192
 TEST_SIZE = 0.2
 NORMALIZE_MEAN = 0.5
 NORMALIZE_STD = 0.5
@@ -29,8 +30,13 @@ DROPOUT = 0.4
 BATCH_NORM = True
 
 # DataLoader settings
-NUM_WORKERS = min(8, max(4, (os.cpu_count() or 4) // 2))
-PREFETCH_FACTOR = 4
+# Cache images in RAM once; on Windows avoid multi-process loaders (spawn is slow).
+CACHE_IMAGES_IN_MEMORY = True
+if CACHE_IMAGES_IN_MEMORY or sys.platform.startswith("win"):
+    NUM_WORKERS = 0
+else:
+    NUM_WORKERS = min(8, max(4, (os.cpu_count() or 4) // 2))
+PREFETCH_FACTOR = 2
 PIN_MEMORY = torch.cuda.is_available()
 USE_CLASS_BALANCED_SAMPLING = True
 
@@ -39,7 +45,9 @@ USE_AMP = torch.cuda.is_available()
 USE_TTA_DURING_TRAINING = False
 USE_CHANNELS_LAST = torch.cuda.is_available()
 CUDNN_BENCHMARK = True
-TORCH_COMPILE = False
+ALLOW_TF32 = True
+# torch.compile is reliable on Linux CUDA; Windows support is limited.
+TORCH_COMPILE = torch.cuda.is_available() and not sys.platform.startswith("win")
 
 # Training settings
 LEARNING_RATE = 0.001
@@ -48,7 +56,7 @@ WEIGHT_DECAY = 1e-4
 LABEL_SMOOTHING = 0.05
 MIXUP_ALPHA = 0.2
 USE_TTA = True
-NUM_EPOCHS = 5 # 150
+NUM_EPOCHS = 5  # 150
 EARLY_STOPPING_PATIENCE = 25
 CHECKPOINT_PATH = "outputs/best_model.pt"
 RANDOM_SEED = 42

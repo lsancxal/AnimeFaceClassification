@@ -24,7 +24,7 @@ def predict_logits(
     return (logits + model(flipped)) / 2.0
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def evaluate_loader(
     model: nn.Module,
     data_loader: DataLoader,
@@ -35,46 +35,26 @@ def evaluate_loader(
 ) -> tuple[float, float]:
     """Compute average loss and accuracy in a single pass over the loader."""
     model.eval()
-    running_loss = 0.0
+    running_loss = torch.zeros((), device=device)
     correct = 0
     total = 0
+    num_batches = 0
 
     for images, labels in data_loader:
         images = to_device(images, device)
         labels = labels.to(device, non_blocking=device.type == "cuda")
         outputs = predict_logits(model, images, use_tta=use_tta)
-        running_loss += criterion(outputs, labels).item()
+        running_loss += criterion(outputs, labels).detach()
         predicted = outputs.argmax(dim=1)
         total += labels.size(0)
-        correct += (predicted == labels).sum().item()
+        correct += int((predicted == labels).sum().item())
+        num_batches += 1
 
-    num_batches = max(len(data_loader), 1)
     accuracy = correct / max(total, 1)
-    return running_loss / num_batches, accuracy
+    return float(running_loss.item()) / max(num_batches, 1), accuracy
 
 
-@torch.no_grad()
-def calculate_accuracy(
-    model: nn.Module,
-    data_loader: DataLoader,
-    *,
-    device: torch.device = DEVICE,
-    use_tta: bool = USE_TTA,
-    verbose: bool = False,
-) -> float:
-    _, accuracy = evaluate_loader(
-        model,
-        data_loader,
-        nn.CrossEntropyLoss(),
-        device=device,
-        use_tta=use_tta,
-    )
-    if verbose:
-        print(f"Validation Accuracy: {100 * accuracy:.2f}%")
-    return accuracy
-
-
-@torch.no_grad()
+@torch.inference_mode()
 def get_predictions(
     model: nn.Module,
     data_loader: DataLoader,

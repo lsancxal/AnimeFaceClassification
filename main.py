@@ -4,12 +4,11 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-import numpy as np
-import torch
-
 from src.config import (
     BATCH_NORM,
+    BATCH_SIZE,
     BLOCKS_PER_STAGE,
+    CACHE_IMAGES_IN_MEMORY,
     CONV_CHANNELS,
     DEVICE,
     DROPOUT,
@@ -17,44 +16,28 @@ from src.config import (
     LEAKY_RELU,
     MIXUP_ALPHA,
     RANDOM_SEED,
-    USE_CLASS_BALANCED_SAMPLING,
     USE_AMP,
+    USE_CLASS_BALANCED_SAMPLING,
     USE_TTA,
     USE_TTA_DURING_TRAINING,
     WEIGHT_DECAY,
     ZIP_FILE_PATH,
 )
-from src.data import (
-    AnimeDataset,
-    define_train_transforms,
-    define_val_transforms,
-    get_dataloaders,
-    prepare_dataset,
-)
+from src.data import build_train_val_loaders, prepare_dataset
 from src.models import AnimeCNN
-from src.training import Trainer, get_predictions
-from src.training.performance import enable_performance_features, optimize_model
+from src.training import Trainer, enable_performance_features, optimize_model
+from src.utils import seed_everything
 from src.visualization import (
-    plot_accuracy_and_cost,
-    plot_confusion_matrix,
-    plot_losses,
-    plot_precision_recall_combined,
     plot_random_images,
-    plot_top_confused_pairs,
-    save_metrics_html_report,
+    save_training_reports,
     set_run_timestamp,
 )
 
 
-def _seed_everything(seed: int) -> None:
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-
-
 def _print_run_config(model: AnimeCNN) -> None:
     print(f"Image size: {IMAGE_SIZE}")
+    print(f"Batch size: {BATCH_SIZE}")
+    print(f"Cache images in memory: {CACHE_IMAGES_IN_MEMORY}")
     print(f"Conv channels: {CONV_CHANNELS} ({BLOCKS_PER_STAGE} residual blocks/stage)")
     print(f"Using batch normalization: {BATCH_NORM}")
     print(f"Using leaky ReLU: {LEAKY_RELU}")
@@ -70,10 +53,9 @@ def _print_run_config(model: AnimeCNN) -> None:
 
 def main() -> None:
     print("Starting...")
-    run_stamp = set_run_timestamp()
-    print(f"Run timestamp: {run_stamp}")
+    print(f"Run timestamp: {set_run_timestamp()}")
 
-    _seed_everything(RANDOM_SEED)
+    seed_everything(RANDOM_SEED)
     enable_performance_features()
     print(f"Using device: {DEVICE}")
 
@@ -85,46 +67,13 @@ def main() -> None:
     print("Plotting random images from disk...")
     plot_random_images(samples, class_names, show=True)
 
-    train_dataset = AnimeDataset(
-        samples,
-        class_names,
-        transform=define_train_transforms(),
-    )
-    val_dataset = AnimeDataset(
-        samples,
-        class_names,
-        transform=define_val_transforms(),
-    )
-    train_loader, val_loader = get_dataloaders(train_dataset, val_dataset)
-
+    train_loader, val_loader = build_train_val_loaders(samples, class_names)
     model = optimize_model(AnimeCNN(num_classes=len(class_names)))
     _print_run_config(model)
 
     print("Training and evaluating model...")
     history = Trainer(model).fit(train_loader, val_loader)
-
-    print("Plotting losses...")
-    plot_losses(history.train_losses, history.val_losses)
-
-    print("Plotting accuracy and cost...")
-    plot_accuracy_and_cost(history.train_losses, history.accuracies)
-
-    predictions, labels = get_predictions(model, val_loader)
-
-    print("Plotting confusion matrix...")
-    plot_confusion_matrix(predictions, labels, class_names=class_names)
-
-    print("Plotting top confused pairs...")
-    plot_top_confused_pairs(predictions, labels, class_names=class_names)
-
-    print("Plotting precision and recall...")
-    plot_precision_recall_combined(predictions, labels, class_names=class_names)
-
-    print("Saving scrollable HTML metrics report...")
-    save_metrics_html_report(predictions, labels, class_names=class_names)
-
-    print(f"\nLast logged accuracy: {history.accuracies[-1]:.4f}")
-    print(f"Peak logged accuracy: {max(history.accuracies):.4f}")
+    save_training_reports(history, model, val_loader, class_names, show=True)
 
 
 if __name__ == "__main__":

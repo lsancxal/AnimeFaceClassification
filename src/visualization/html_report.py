@@ -65,7 +65,13 @@ def save_metrics_html_report(
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
       max-width: 1100px;
     }}
-    h1 {{ margin-top: 0; }}
+    h1 {{ margin-top: 0; margin-bottom: 4px; }}
+    .run-stamp {{
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #222;
+    }}
     .summary {{
       display: flex;
       gap: 16px;
@@ -108,8 +114,8 @@ def save_metrics_html_report(
 <body>
   <div class="card">
     <h1>Classification Metrics Report</h1>
+    <p class="run-stamp">Run: {run_stamp}</p>
     <div class="summary">
-      <div class="pill">Run: {run_stamp}</div>
       <div class="pill">Batch Norm: {batch_norm_label}</div>
       <div class="pill">Leaky ReLU: {leaky_relu_label}</div>
       <div class="pill">Classes: {len(class_names)}</div>

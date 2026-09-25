@@ -1,8 +1,10 @@
 """Image transforms for training and validation."""
 
+from __future__ import annotations
+
 from torchvision import transforms
 
-from src.config import IMAGE_SIZE, NORMALIZE_MEAN, NORMALIZE_STD
+from src.config import CACHE_IMAGES_IN_MEMORY, IMAGE_SIZE, NORMALIZE_MEAN, NORMALIZE_STD
 
 
 def _normalize(normalize_mean: float, normalize_std: float) -> transforms.Normalize:
@@ -36,21 +38,20 @@ def define_val_transforms(
     image_size: int = IMAGE_SIZE,
     normalize_mean: float = NORMALIZE_MEAN,
     normalize_std: float = NORMALIZE_STD,
+    *,
+    skip_resize: bool | None = None,
 ) -> transforms.Compose:
     """Deterministic transforms for validation / evaluation."""
-    return transforms.Compose(
+    if skip_resize is None:
+        skip_resize = CACHE_IMAGES_IN_MEMORY
+
+    ops: list = []
+    if not skip_resize:
+        ops.append(transforms.Resize((image_size, image_size)))
+    ops.extend(
         [
-            transforms.Resize((image_size, image_size)),
             transforms.ToTensor(),
             _normalize(normalize_mean, normalize_std),
         ]
     )
-
-
-def define_transforms(
-    image_size: int = IMAGE_SIZE,
-    normalize_mean: float = NORMALIZE_MEAN,
-    normalize_std: float = NORMALIZE_STD,
-) -> transforms.Compose:
-    """Backward-compatible alias for validation-style transforms."""
-    return define_val_transforms(image_size, normalize_mean, normalize_std)
+    return transforms.Compose(ops)

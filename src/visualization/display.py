@@ -12,7 +12,11 @@ def _should_open_figures(show: bool) -> bool:
     if not show:
         return False
     # Headless / Docker: no GUI display
-    if os.name != "nt" and not os.environ.get("DISPLAY") and not os.environ.get("WAYLAND_DISPLAY"):
+    if (
+        os.name != "nt"
+        and not os.environ.get("DISPLAY")
+        and not os.environ.get("WAYLAND_DISPLAY")
+    ):
         return False
     if os.environ.get("SHOW_FIGURES", "1").lower() in {"0", "false", "no"}:
         return False

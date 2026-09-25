@@ -85,7 +85,8 @@ class Trainer:
 
     def train_one_epoch(self, train_loader: DataLoader) -> float:
         self.model.train()
-        running_loss = 0.0
+        running_loss = torch.zeros((), device=self.device)
+        num_batches = 0
 
         for inputs, labels in train_loader:
             inputs = to_device(inputs, self.device)
@@ -109,9 +110,10 @@ class Trainer:
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
             self.scaler.update()
-            running_loss += loss.item()
+            running_loss += loss.detach()
+            num_batches += 1
 
-        return running_loss / max(len(train_loader), 1)
+        return float(running_loss.item()) / max(num_batches, 1)
 
     def fit(
         self,
@@ -196,14 +198,3 @@ class Trainer:
             f"at epoch {history.best_epoch}"
         )
         return history
-
-
-def train_and_evaluate(
-    model: nn.Module,
-    train_loader: DataLoader,
-    val_loader: DataLoader,
-    **kwargs,
-) -> tuple[list[float], list[float], list[float]]:
-    """Backward-compatible wrapper around :class:`Trainer`."""
-    history = Trainer(model, **kwargs).fit(train_loader, val_loader)
-    return history.train_losses, history.val_losses, history.accuracies

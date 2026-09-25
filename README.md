@@ -13,4 +13,3 @@ docker compouse up --build
 ### Notes
 
 - Training outputs are written to `./output`.
-- Dataset cache is stored in Docker volume 

@@ -11,6 +11,7 @@ from src.visualization.precision_and_recall import (
     calculate_precision_recall,
     plot_precision_recall_combined,
 )
+from src.visualization.reports import save_training_reports
 from src.visualization.utils import plot_losses, plot_random_images
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "plot_precision_recall_combined",
     "calculate_precision_recall",
     "save_metrics_html_report",
+    "save_training_reports",
     "set_run_timestamp",
     "get_run_timestamp",
 ]
