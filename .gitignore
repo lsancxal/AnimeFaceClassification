@@ -1,3 +1,7 @@
 __pycache__/
-outputs/
 src/data/extracted/
+
+# Keep plots/reports local; allow model checkpoints (tracked via Git LFS)
+outputs/*
+!outputs/*.pt
+!outputs/.gitkeep
