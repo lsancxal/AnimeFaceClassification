@@ -46,8 +46,8 @@ USE_TTA_DURING_TRAINING = False
 USE_CHANNELS_LAST = torch.cuda.is_available()
 CUDNN_BENCHMARK = True
 ALLOW_TF32 = True
-# torch.compile is reliable on Linux CUDA; Windows support is limited.
-TORCH_COMPILE = torch.cuda.is_available() and not sys.platform.startswith("win")
+# Opt-in only: torch.compile needs a working Triton/C compiler (often missing in Docker).
+TORCH_COMPILE = os.environ.get("TORCH_COMPILE", "0").lower() in {"1", "true", "yes"}
 
 # Training settings
 LEARNING_RATE = 0.001

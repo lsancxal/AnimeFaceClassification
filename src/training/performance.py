@@ -27,15 +27,31 @@ def enable_performance_features() -> None:
         torch.set_float32_matmul_precision("high")
 
 
+def unwrap_model(model: nn.Module) -> nn.Module:
+    """Return the underlying module if wrapped by torch.compile."""
+    return getattr(model, "_orig_mod", model)
+
+
 def optimize_model(model: nn.Module) -> nn.Module:
     """Apply optional runtime optimizations that do not change model weights."""
     if USE_CHANNELS_LAST and DEVICE.type == "cuda":
         model = model.to(memory_format=torch.channels_last)
 
-    if TORCH_COMPILE and hasattr(torch, "compile"):
-        model = torch.compile(model)
+    if not TORCH_COMPILE or not hasattr(torch, "compile"):
+        return model
 
-    return model
+    # Docker images often lack a C compiler; Triton/inductor then fails on first forward.
+    # Suppress so training continues in eager mode instead of crashing.
+    import torch._dynamo as dynamo
+
+    dynamo.config.suppress_errors = True
+    try:
+        compiled = torch.compile(model)
+        print("Using torch.compile (falls back to eager if inductor fails)")
+        return compiled
+    except Exception as exc:  # noqa: BLE001 - missing toolchain / unsupported backend
+        print(f"torch.compile unavailable ({exc}); continuing without it")
+        return model
 
 
 def to_device(

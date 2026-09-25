@@ -9,6 +9,7 @@ import torch
 import torch.nn as nn
 
 from src.config import DEVICE
+from src.training.performance import unwrap_model
 
 
 def save_checkpoint(
@@ -23,7 +24,7 @@ def save_checkpoint(
     torch.save(
         {
             "epoch": epoch,
-            "model_state_dict": model.state_dict(),
+            "model_state_dict": unwrap_model(model).state_dict(),
             "val_accuracy": val_accuracy,
             "val_loss": val_loss,
         },
@@ -38,5 +39,5 @@ def load_checkpoint(
     device: torch.device = DEVICE,
 ) -> dict[str, Any]:
     checkpoint = torch.load(path, map_location=device, weights_only=True)
-    model.load_state_dict(checkpoint["model_state_dict"])
+    unwrap_model(model).load_state_dict(checkpoint["model_state_dict"])
     return checkpoint
