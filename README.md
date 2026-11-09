@@ -7,7 +7,7 @@ This project classifies anime faces to 130 classes using a convolutional neural 
 
 ## Run with Docker
 
-docker compouse up --build
+docker compose up --build
 
 
 ### Notes
