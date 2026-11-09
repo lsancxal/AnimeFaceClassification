@@ -20,6 +20,26 @@ def make_activation() -> nn.Module:
     return nn.ReLU(inplace=True)
 
 
+def init_he_weights(module: nn.Module) -> None:
+    """He (Kaiming) normal init tailored for the project's activation."""
+    if isinstance(module, (nn.Conv2d, nn.Linear)):
+        if LEAKY_RELU:
+            nn.init.kaiming_normal_(
+                module.weight,
+                a=LEAKY_SLOPE,
+                mode="fan_in",
+                nonlinearity="leaky_relu",
+            )
+        else:
+            nn.init.kaiming_normal_(
+                module.weight,
+                mode="fan_in",
+                nonlinearity="relu",
+            )
+        if module.bias is not None:
+            nn.init.zeros_(module.bias)
+
+
 class ResidualBlock(nn.Module):
     """Two 3x3 convolutions with a residual shortcut."""
 

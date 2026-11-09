@@ -13,7 +13,7 @@ from src.config import (
     POOL_AFTER_STAGE,
     POOL_SIZE,
 )
-from src.models.blocks import ResidualBlock, make_activation
+from src.models.blocks import ResidualBlock, init_he_weights, make_activation
 
 
 class AnimeCNN(nn.Module):
@@ -48,6 +48,7 @@ class AnimeCNN(nn.Module):
             nn.Dropout(DROPOUT),
             nn.Linear(FC_HIDDEN_SIZE, num_classes),
         )
+        self.apply(init_he_weights)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
